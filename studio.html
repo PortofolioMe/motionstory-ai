@@ -1,0 +1,147 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101426">
+
+  <title>MOTIONSTORY AI</title>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">M</div>
+        <div>
+          <h2>MOTIONSTORY <span>AI</span></h2>
+          <small>PERSONAL WORKSPACE</small>
+        </div>
+      </div>
+
+      <nav>
+        <button class="nav-item active" data-page="dashboard">
+          Dashboard
+        </button>
+
+        <button class="nav-item" data-page="projects">
+          Semua Proyek
+        </button>
+
+        <button class="nav-item" data-page="settings">
+          Pengaturan API
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <span id="connectionStatus">● Belum terhubung</span>
+        <small>Version 1.0</small>
+      </div>
+    </aside>
+
+    <main class="main-content">
+
+      <header class="topbar">
+        <div>
+          <p>PERSONAL CREATIVE STUDIO</p>
+          <h1 id="pageTitle">Dashboard</h1>
+        </div>
+
+        <button id="newProjectBtn">
+          + Proyek Baru
+        </button>
+      </header>
+
+      <section id="dashboardPage" class="page">
+        <div class="welcome">
+          <p>SELAMAT DATANG DI MOTIONSTORY AI</p>
+          <h2>Ubah ide menjadi cerita visual.</h2>
+          <p>
+            Kelola proyek video, susun adegan, dan bangun
+            storyboard dalam satu workspace.
+          </p>
+
+          <button id="createFirstProject">
+            + Buat Proyek Pertama
+          </button>
+        </div>
+
+        <div class="stats">
+          <div class="stat-card">
+            <span>Total Proyek</span>
+            <strong id="totalProjects">0</strong>
+          </div>
+
+          <div class="stat-card">
+            <span>Total Adegan</span>
+            <strong id="totalScenes">0</strong>
+          </div>
+
+          <div class="stat-card">
+            <span>Status API</span>
+            <strong id="apiStatus">Offline</strong>
+          </div>
+        </div>
+
+        <div class="section-heading">
+          <h2>Proyek Terbaru</h2>
+        </div>
+
+        <div id="recentProjects">
+          <p>Belum ada proyek yang dimuat.</p>
+        </div>
+      </section>
+
+      <section id="projectsPage" class="page hidden">
+        <h2>Semua Proyek</h2>
+        <div id="allProjects">
+          <p>Memuat proyek...</p>
+        </div>
+      </section>
+
+      <section id="settingsPage" class="page hidden">
+        <h2>Pengaturan API</h2>
+
+        <label for="apiUrl">API Base URL</label>
+        <input
+          id="apiUrl"
+          type="url"
+          value="https://motionstory-api.ane-you1111.workers.dev"
+        >
+
+        <label for="apiToken">API Token</label>
+        <input
+          id="apiToken"
+          type="password"
+          placeholder="Masukkan API Token"
+        >
+
+        <button id="saveSettings">
+          Simpan dan Tes Koneksi
+        </button>
+
+        <p id="settingsMessage"></p>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="legal-footer">
+    <div class="legal-footer-content">
+      <span>© 2026 MOTIONSTORY AI</span>
+
+      <div class="legal-links">
+        <a href="terms.html">Terms of Service</a>
+        <a href="privacy.html">Privacy Policy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+
+</body>
+</html>
