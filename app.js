@@ -1,3 +1,4 @@
+
 // =================================
 // CONFIGURATION
 // =================================
@@ -43,7 +44,9 @@ async function apiRequest(endpoint, options = {}) {
   }
 
   if (!response.ok || result.ok === false) {
-    throw new Error(result.error || `Permintaan API gagal (${response.status})`);
+    throw new Error(
+      result.error || `Permintaan API gagal (${response.status})`
+    );
   }
 
   return result;
@@ -79,7 +82,9 @@ async function checkConnection() {
   try {
     const result = await apiRequest("/api/health");
 
-    const online = result.database === true && result.ai === true;
+    const online =
+      result.database === true &&
+      result.ai === true;
 
     document.getElementById("apiStatus").textContent =
       online ? "Online" : "Periksa Backend";
@@ -91,6 +96,7 @@ async function checkConnection() {
 
   } catch (error) {
     document.getElementById("apiStatus").textContent = "Offline";
+
     document.getElementById("connectionStatus").textContent =
       "● Tidak terhubung";
 
@@ -106,7 +112,9 @@ async function checkConnection() {
 async function loadProjects() {
   try {
     const result = await apiRequest("/api/projects");
+
     projects = result.projects || [];
+
     renderProjects();
 
   } catch (error) {
@@ -121,6 +129,99 @@ async function loadProjects() {
 }
 
 // =================================
+// PROJECT CARD
+// =================================
+
+function renderProjectCard(project) {
+  const id = escapeHTML(project.id);
+  const title = escapeHTML(project.title);
+  const description = escapeHTML(
+    project.description || "Belum ada deskripsi."
+  );
+
+  const status = escapeHTML(project.status || "draft");
+
+  return `
+    <div class="project-card" style="
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      align-items:center;
+      gap:16px;
+      padding:18px;
+      margin:12px 0;
+      background:#171e32;
+      color:#f4f6ff;
+      border:1px solid #35415f;
+      border-radius:14px;
+    ">
+
+      <div style="flex:1;min-width:180px">
+        <h3 style="color:#ffffff;margin:0 0 8px">
+          ${title}
+        </h3>
+
+        <p style="color:#cbd3e8;margin:0 0 8px;line-height:1.6">
+          ${description}
+        </p>
+
+        <span style="
+          display:inline-block;
+          color:#54d5e8;
+          background:#101628;
+          padding:4px 9px;
+          border-radius:6px;
+          font-size:12px;
+        ">
+          ${status}
+        </span>
+      </div>
+
+      <div style="
+        display:flex;
+        flex-wrap:wrap;
+        gap:9px;
+      ">
+
+        <button
+          type="button"
+          data-open-project="${id}"
+          style="
+            background:#7865e9;
+            color:#ffffff;
+            border:0;
+            border-radius:8px;
+            padding:10px 16px;
+            font-weight:600;
+            cursor:pointer;
+          "
+        >
+          Buka
+        </button>
+
+        <button
+          type="button"
+          data-delete-project="${id}"
+          data-project-title="${title}"
+          style="
+            background:#8f3548;
+            color:#ffffff;
+            border:0;
+            border-radius:8px;
+            padding:10px 16px;
+            font-weight:600;
+            cursor:pointer;
+          "
+        >
+          Hapus
+        </button>
+
+      </div>
+    </div>
+  `;
+}
+
+// =================================
 // RENDER PROJECTS
 // =================================
 
@@ -129,24 +230,113 @@ function renderProjects() {
     projects.length;
 
   const html = projects.length
-    ? projects.map(project => `
-      <div class="project-card"
-           data-project-id="${escapeHTML(project.id)}"
-           style="cursor:pointer">
-        <h3>${escapeHTML(project.title)}</h3>
-        <p>${escapeHTML(project.description || "Belum ada deskripsi")}</p>
+    ? projects.map(renderProjectCard).join("")
+    : `
+      <div style="
+        background:#171e32;
+        color:#aeb9d2;
+        padding:20px;
+        border:1px solid #28314b;
+        border-radius:12px;
+      ">
+        Belum ada proyek.
       </div>
-    `).join("")
-    : "<p>Belum ada proyek.</p>";
+    `;
 
   document.getElementById("recentProjects").innerHTML = html;
-  document.getElementById("allProjects").innerHTML = html;
 
-  document.querySelectorAll("[data-project-id]").forEach(card => {
-    card.addEventListener("click", () => {
-      openProject(card.dataset.projectId);
-    });
-  });
+  document.getElementById("allProjects").innerHTML = html;
+}
+
+// =================================
+// PROJECT BUTTON EVENTS
+// =================================
+
+async function handleProjectAction(event) {
+  const deleteButton = event.target.closest(
+    "[data-delete-project]"
+  );
+
+  if (deleteButton) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const id = deleteButton.dataset.deleteProject;
+    const title = deleteButton.dataset.projectTitle;
+
+    await deleteProject(id, title, deleteButton);
+    return;
+  }
+
+  const openButton = event.target.closest(
+    "[data-open-project]"
+  );
+
+  if (openButton) {
+    event.preventDefault();
+
+    const id = openButton.dataset.openProject;
+
+    await openProject(id);
+  }
+}
+
+// =================================
+// DELETE PROJECT
+// =================================
+
+async function deleteProject(id, title, button) {
+  if (!id) {
+    notify("ID proyek tidak ditemukan.");
+    return;
+  }
+
+  const confirmed = confirm(
+    `Yakin ingin menghapus proyek "${title}"?\n\n` +
+    "Seluruh adegan di dalam proyek ini juga akan dihapus.\n\n" +
+    "Data yang sudah dihapus tidak dapat dipulihkan."
+  );
+
+  if (!confirmed) return;
+
+  const originalText = button.textContent;
+
+  button.disabled = true;
+  button.textContent = "Menghapus...";
+
+  try {
+    const result = await apiRequest(
+      `/api/projects/${encodeURIComponent(id)}`,
+      {
+        method: "DELETE"
+      }
+    );
+
+    notify(
+      result.message ||
+      "Proyek dan seluruh adegannya berhasil dihapus."
+    );
+
+    // Muat ulang daftar proyek dari database.
+    await loadProjects();
+
+    // Bersihkan hasil tampilan jika proyek yang dihapus
+    // sedang ditampilkan.
+    const output = document.getElementById("generatedResult");
+
+    if (output && output.dataset.projectId === String(id)) {
+      output.innerHTML = "";
+      output.dataset.projectId = "";
+    }
+
+  } catch (error) {
+    console.error("Gagal menghapus proyek:", error);
+
+    notify("Gagal menghapus proyek: " + error.message);
+
+    button.disabled = false;
+    button.textContent = originalText;
+  }
 }
 
 // =================================
@@ -163,6 +353,7 @@ function showPage(page) {
 
   pages.forEach(name => {
     const element = document.getElementById(name + "Page");
+
     if (element) {
       element.classList.toggle("hidden", name !== page);
     }
@@ -192,9 +383,11 @@ function showPage(page) {
 
 async function createProject() {
   const title = prompt("Masukkan judul proyek:");
+
   if (!title || !title.trim()) return;
 
-  const description = prompt("Masukkan deskripsi proyek:") || "";
+  const description =
+    prompt("Masukkan deskripsi proyek:") || "";
 
   try {
     await apiRequest("/api/projects", {
@@ -206,6 +399,7 @@ async function createProject() {
     });
 
     notify("Proyek berhasil dibuat!");
+
     await loadProjects();
 
   } catch (error) {
@@ -233,37 +427,86 @@ async function openProject(id) {
     );
 
     let html = `
-      <h2>${escapeHTML(project?.title || "Proyek")}</h2>
-      <p>${scenes.length} adegan</p>
+      <div style="
+        background:#171e32;
+        color:#f4f6ff;
+        border:1px solid #35415f;
+        border-radius:14px;
+        padding:20px;
+        margin-bottom:18px;
+      ">
+        <h2 style="color:#ffffff">
+          ${escapeHTML(project?.title || "Proyek")}
+        </h2>
+
+        <p style="color:#cbd3e8">
+          ${scenes.length} adegan
+        </p>
+      </div>
     `;
 
     if (scenes.length) {
       html += scenes.map(scene => `
         <article style="
-          background:#fff;border:1px solid #e5e7eb;border-radius:12px;
-          padding:16px;margin:12px 0
+          background:#171e32;
+          color:#f4f6ff;
+          border:1px solid #35415f;
+          border-radius:12px;
+          padding:16px;
+          margin:12px 0;
         ">
-          <h3>Adegan ${escapeHTML(scene.scene_number)}:
-            ${escapeHTML(scene.title || "")}</h3>
-          <p><strong>Narasi:</strong><br>
-            ${escapeHTML(scene.narration || "")}</p>
-          <p><strong>Visual Prompt:</strong><br>
-            ${escapeHTML(scene.visual_prompt || "")}</p>
-          <p><strong>Sound Effect:</strong>
-            ${escapeHTML(scene.sound_effect || "-")}</p>
-          <p><strong>Musik:</strong>
-            ${escapeHTML(scene.music || "-")}</p>
-          <p><strong>Transisi:</strong>
-            ${escapeHTML(scene.transition || "-")}</p>
-          <p><strong>Durasi:</strong>
-            ${escapeHTML(scene.duration || 8)} detik</p>
+
+          <h3 style="color:#ffffff">
+            Adegan ${escapeHTML(scene.scene_number)}:
+            ${escapeHTML(scene.title || "")}
+          </h3>
+
+          <p>
+            <strong style="color:#54d5e8">Narasi:</strong><br>
+            ${escapeHTML(scene.narration || "-")}
+          </p>
+
+          <p>
+            <strong style="color:#54d5e8">Visual Prompt:</strong><br>
+            ${escapeHTML(scene.visual_prompt || "-")}
+          </p>
+
+          <p>
+            <strong style="color:#54d5e8">Sound Effect:</strong><br>
+            ${escapeHTML(scene.sound_effect || "-")}
+          </p>
+
+          <p>
+            <strong style="color:#54d5e8">Musik:</strong><br>
+            ${escapeHTML(scene.music || "-")}
+          </p>
+
+          <p>
+            <strong style="color:#54d5e8">Transisi:</strong><br>
+            ${escapeHTML(scene.transition || "-")}
+          </p>
+
+          <p>
+            <strong style="color:#54d5e8">Durasi:</strong>
+            ${escapeHTML(scene.duration || 8)} detik
+          </p>
+
         </article>
       `).join("");
+
     } else {
-      html += "<p>Belum ada adegan pada proyek ini.</p>";
+      html += `
+        <p style="color:#aeb9d2">
+          Belum ada adegan pada proyek ini.
+        </p>
+      `;
     }
 
-    document.getElementById("generatedResult").innerHTML = html;
+    const output = document.getElementById("generatedResult");
+
+    output.innerHTML = html;
+    output.dataset.projectId = String(id);
+
     showPage("generator");
 
   } catch (error) {
@@ -288,26 +531,38 @@ async function generateStory() {
   if (!API_TOKEN) {
     message.textContent =
       "Masukkan API Token terlebih dahulu di Pengaturan API.";
+
     showPage("settings");
     return;
   }
 
   if (!topic) {
-    message.textContent = "Silakan masukkan tema cerita terlebih dahulu.";
+    message.textContent =
+      "Silakan masukkan tema cerita terlebih dahulu.";
+
     topicInput.focus();
     return;
   }
 
-  if (!Number.isInteger(duration) || duration < 30 || duration > 240) {
-    message.textContent = "Durasi harus antara 30 sampai 240 detik.";
+  if (
+    !Number.isInteger(duration) ||
+    duration < 30 ||
+    duration > 240
+  ) {
+    message.textContent =
+      "Durasi harus antara 30 sampai 240 detik.";
+
     return;
   }
 
   button.disabled = true;
   button.textContent = "Sedang membuat cerita...";
+
   message.textContent =
     "AI sedang menyusun cerita dan adegan. Mohon tunggu.";
+
   output.innerHTML = "";
+  output.dataset.projectId = "";
 
   try {
     const result = await apiRequest("/api/ai/generate", {
@@ -332,6 +587,10 @@ async function generateStory() {
 
     renderGeneratedStory(project, scenes);
 
+    if (project.id) {
+      output.dataset.projectId = String(project.id);
+    }
+
     await loadProjects();
 
   } catch (error) {
@@ -345,8 +604,6 @@ async function generateStory() {
     button.textContent = "✨ Buat Cerita dengan AI";
   }
 }
-
-
 
 // =================================
 // RENDER GENERATED STORY
@@ -367,7 +624,13 @@ function renderGeneratedStory(project, scenes) {
       padding:22px;
       margin-bottom:20px;
     ">
-      <p style="color:#54d5e8;font-size:12px;font-weight:700;letter-spacing:1px">
+
+      <p style="
+        color:#54d5e8;
+        font-size:12px;
+        font-weight:700;
+        letter-spacing:1px;
+      ">
         HASIL GENERATOR AI
       </p>
 
@@ -382,6 +645,7 @@ function renderGeneratedStory(project, scenes) {
       <p style="color:#54d5e8">
         <strong>Total adegan:</strong> ${scenes.length}
       </p>
+
     </div>
 
     <h2 style="color:#ffffff;margin:25px 0 15px">
@@ -420,6 +684,7 @@ function renderGeneratedStory(project, scenes) {
           <strong style="color:#54d5e8">
             Narasi Bahasa Indonesia
           </strong>
+
           <p style="color:#f4f6ff;line-height:1.8;margin-bottom:0">
             ${escapeHTML(scene.narration || "-")}
           </p>
@@ -435,6 +700,7 @@ function renderGeneratedStory(project, scenes) {
           <strong style="color:#54d5e8">
             Visual Prompt (English)
           </strong>
+
           <p style="color:#e0e6f5;line-height:1.8;margin-bottom:0">
             ${escapeHTML(scene.visual_prompt || "-")}
           </p>
@@ -450,6 +716,7 @@ function renderGeneratedStory(project, scenes) {
           <strong style="color:#54d5e8">
             Sound Effect
           </strong>
+
           <p style="color:#e0e6f5;margin-bottom:0">
             ${escapeHTML(scene.sound_effect || "-")}
           </p>
@@ -465,6 +732,7 @@ function renderGeneratedStory(project, scenes) {
           <strong style="color:#54d5e8">
             Music
           </strong>
+
           <p style="color:#e0e6f5;margin-bottom:0">
             ${escapeHTML(scene.music || "-")}
           </p>
@@ -480,6 +748,7 @@ function renderGeneratedStory(project, scenes) {
           <strong style="color:#54d5e8">
             Transition
           </strong>
+
           <p style="color:#e0e6f5;margin-bottom:0">
             ${escapeHTML(scene.transition || "-")}
           </p>
@@ -498,8 +767,6 @@ function renderGeneratedStory(project, scenes) {
 // =================================
 // TIKTOK STATUS
 // =================================
-
-
 
 async function loadTikTokStatus() {
   const status = document.getElementById("tiktokStatus");
@@ -522,14 +789,16 @@ async function loadTikTokStatus() {
       const account = result.account;
 
       status.textContent = "● Terhubung";
-      status.style.background = "#dcfce7";
-      status.style.color = "#166534";
+      status.style.background = "#163c34";
+      status.style.color = "#8ce5c3";
 
       name.textContent =
         account.display_name || "Akun TikTok terhubung";
 
       openId.textContent =
-        account.open_id ? "ID: " + account.open_id : "Akun terhubung";
+        account.open_id
+          ? "ID: " + account.open_id
+          : "Akun terhubung";
 
       if (account.avatar_url) {
         avatar.src = account.avatar_url;
@@ -540,6 +809,7 @@ async function loadTikTokStatus() {
           avatar.style.display = "none";
           placeholder.style.display = "flex";
         };
+
       } else {
         avatar.style.display = "none";
         placeholder.style.display = "flex";
@@ -561,8 +831,8 @@ async function loadTikTokStatus() {
     console.error("Gagal memeriksa TikTok:", error);
 
     status.textContent = "Belum terhubung";
-    status.style.background = "#fef3c7";
-    status.style.color = "#92400e";
+    status.style.background = "#3b3420";
+    status.style.color = "#fcd978";
 
     message.textContent =
       "Tidak dapat memeriksa akun TikTok. Periksa API Token.";
@@ -590,8 +860,8 @@ function showTikTokDisconnected() {
   if (!status || !button) return;
 
   status.textContent = "Belum terhubung";
-  status.style.background = "#fef3c7";
-  status.style.color = "#92400e";
+  status.style.background = "#3b3420";
+  status.style.color = "#fcd978";
 
   name.textContent = "Belum ada akun terhubung";
   openId.textContent = "Hubungkan akun TikTok Anda";
@@ -617,7 +887,10 @@ async function connectTikTok() {
   const message = document.getElementById("tiktokMessage");
 
   if (!API_TOKEN) {
-    notify("Masukkan API Token terlebih dahulu di Pengaturan API.");
+    notify(
+      "Masukkan API Token terlebih dahulu di Pengaturan API."
+    );
+
     showPage("settings");
     return;
   }
@@ -625,7 +898,9 @@ async function connectTikTok() {
   try {
     button.disabled = true;
     button.textContent = "Menghubungkan...";
-    message.textContent = "Menyiapkan koneksi TikTok...";
+
+    message.textContent =
+      "Menyiapkan koneksi TikTok...";
 
     const result = await apiRequest("/api/tiktok/auth", {
       method: "POST",
@@ -640,11 +915,14 @@ async function connectTikTok() {
 
   } catch (error) {
     console.error("Gagal menghubungkan TikTok:", error);
+
     notify("Gagal menghubungkan TikTok: " + error.message);
 
     button.disabled = false;
     button.textContent = "Hubungkan TikTok";
-    message.textContent = "Koneksi TikTok belum berhasil dimulai.";
+
+    message.textContent =
+      "Koneksi TikTok belum berhasil dimulai.";
   }
 }
 
@@ -704,6 +982,10 @@ document.getElementById("saveSettings").addEventListener(
 document.querySelectorAll(".nav-item").forEach(button => {
   button.addEventListener("click", () => {
     showPage(button.dataset.page);
+
+    if (button.dataset.page === "projects") {
+      loadProjects();
+    }
   });
 });
 
@@ -727,6 +1009,17 @@ document.getElementById("connectTikTokBtn").addEventListener(
   connectTikTok
 );
 
+// Klik tombol Buka dan Hapus pada daftar proyek.
+document.getElementById("recentProjects").addEventListener(
+  "click",
+  handleProjectAction
+);
+
+document.getElementById("allProjects").addEventListener(
+  "click",
+  handleProjectAction
+);
+
 // =================================
 // INITIALIZATION
 // =================================
@@ -740,6 +1033,7 @@ async function initializeApp() {
   if (connected) {
     await loadProjects();
     await loadTikTokStatus();
+
   } else {
     showTikTokDisconnected();
   }
