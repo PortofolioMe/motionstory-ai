@@ -9,7 +9,6 @@ let projects = [];
 // =================================
 
 async function apiRequest(endpoint, options = {}) {
-
   const headers = {
     "Content-Type": "application/json"
   };
@@ -48,9 +47,7 @@ function notify(message) {
 // =================================
 
 async function checkConnection() {
-
   try {
-
     const result = await apiRequest("/api/health");
 
     document.getElementById("apiStatus").textContent =
@@ -64,14 +61,12 @@ async function checkConnection() {
     return true;
 
   } catch (error) {
-
     document.getElementById("apiStatus").textContent = "Offline";
 
     document.getElementById("connectionStatus").textContent =
       "● Tidak terhubung";
 
     console.error(error);
-
     return false;
   }
 }
@@ -81,9 +76,7 @@ async function checkConnection() {
 // =================================
 
 async function loadProjects() {
-
   try {
-
     const result = await apiRequest("/api/projects");
 
     projects = result.projects || [];
@@ -91,7 +84,6 @@ async function loadProjects() {
     renderProjects();
 
   } catch (error) {
-
     console.error("Gagal memuat proyek:", error);
 
     document.getElementById("recentProjects").innerHTML =
@@ -107,14 +99,13 @@ async function loadProjects() {
 // =================================
 
 function renderProjects() {
-
   document.getElementById("totalProjects").textContent =
     projects.length;
 
   const html = projects.length
     ? projects.map(project => `
       <div class="project-card"
-           onclick="openProject('${project.id}')">
+           onclick="openProject('${escapeHTML(project.id)}')">
 
         <h3>${escapeHTML(project.title)}</h3>
 
@@ -124,11 +115,8 @@ function renderProjects() {
     `).join("")
     : "<p>Belum ada proyek.</p>";
 
-  document.getElementById("recentProjects").innerHTML =
-    html;
-
-  document.getElementById("allProjects").innerHTML =
-    html;
+  document.getElementById("recentProjects").innerHTML = html;
+  document.getElementById("allProjects").innerHTML = html;
 }
 
 // =================================
@@ -136,7 +124,6 @@ function renderProjects() {
 // =================================
 
 function escapeHTML(value) {
-
   return String(value ?? "").replace(/[&<>"']/g, char => ({
     "&": "&amp;",
     "<": "&lt;",
@@ -144,7 +131,6 @@ function escapeHTML(value) {
     '"': "&quot;",
     "'": "&#39;"
   })[char]);
-
 }
 
 // =================================
@@ -152,7 +138,6 @@ function escapeHTML(value) {
 // =================================
 
 async function createProject() {
-
   const title = prompt("Masukkan judul proyek:");
 
   if (!title || !title.trim()) return;
@@ -160,10 +145,8 @@ async function createProject() {
   const description = prompt("Masukkan deskripsi proyek:") || "";
 
   try {
-
     await apiRequest("/api/projects", {
       method: "POST",
-
       body: JSON.stringify({
         title: title.trim(),
         description: description.trim()
@@ -171,13 +154,10 @@ async function createProject() {
     });
 
     notify("Proyek berhasil dibuat!");
-
     await loadProjects();
 
   } catch (error) {
-
     notify("Gagal membuat proyek: " + error.message);
-
   }
 }
 
@@ -186,9 +166,7 @@ async function createProject() {
 // =================================
 
 async function openProject(id) {
-
   try {
-
     const result = await apiRequest(
       `/api/projects/${encodeURIComponent(id)}/scenes`
     );
@@ -208,9 +186,7 @@ async function openProject(id) {
     );
 
   } catch (error) {
-
     notify("Gagal membuka proyek: " + error.message);
-
   }
 }
 
@@ -219,7 +195,6 @@ async function openProject(id) {
 // =================================
 
 function showPage(page) {
-
   const pages = [
     "dashboard",
     "projects",
@@ -227,11 +202,9 @@ function showPage(page) {
   ];
 
   pages.forEach(name => {
-
     const element = document.getElementById(name + "Page");
 
     element.classList.toggle("hidden", name !== page);
-
   });
 
   document.getElementById("pageTitle").textContent =
@@ -242,14 +215,163 @@ function showPage(page) {
       : "Pengaturan API";
 
   document.querySelectorAll(".nav-item").forEach(button => {
-
     button.classList.toggle(
       "active",
       button.dataset.page === page
     );
-
   });
+}
 
+// =================================
+// TIKTOK STATUS
+// =================================
+
+async function loadTikTokStatus() {
+  const status = document.getElementById("tiktokStatus");
+  const name = document.getElementById("tiktokDisplayName");
+  const openId = document.getElementById("tiktokOpenId");
+  const avatar = document.getElementById("tiktokAvatar");
+  const placeholder = document.getElementById("tiktokAvatarPlaceholder");
+  const message = document.getElementById("tiktokMessage");
+  const button = document.getElementById("connectTikTokBtn");
+
+  if (!status || !name || !button) return;
+
+  status.textContent = "Memeriksa...";
+  button.disabled = true;
+
+  try {
+    const result = await apiRequest("/api/tiktok/status");
+
+    if (result.connected && result.account) {
+      const account = result.account;
+
+      status.textContent = "● Terhubung";
+      status.style.background = "#dcfce7";
+      status.style.color = "#166534";
+
+      name.textContent =
+        account.display_name || "Akun TikTok terhubung";
+
+      openId.textContent =
+        account.open_id
+          ? "ID: " + account.open_id
+          : "Akun TikTok berhasil terhubung";
+
+      if (account.avatar_url) {
+        avatar.src = account.avatar_url;
+        avatar.style.display = "block";
+        placeholder.style.display = "none";
+
+        avatar.onerror = () => {
+          avatar.style.display = "none";
+          placeholder.style.display = "flex";
+        };
+      } else {
+        avatar.style.display = "none";
+        placeholder.style.display = "flex";
+      }
+
+      message.textContent =
+        "Akun TikTok Anda berhasil terhubung dengan MOTIONSTORY AI.";
+
+      button.textContent = "TikTok Sudah Terhubung";
+      button.disabled = true;
+      button.style.opacity = "0.65";
+      button.style.cursor = "not-allowed";
+
+    } else {
+      showTikTokDisconnected();
+    }
+
+  } catch (error) {
+    console.error("Gagal memeriksa TikTok:", error);
+
+    status.textContent = "Belum terhubung";
+    status.style.background = "#fef3c7";
+    status.style.color = "#92400e";
+
+    message.textContent =
+      "Tidak dapat memeriksa akun TikTok. Pastikan API Token sudah benar.";
+
+    button.textContent = "Coba Lagi";
+    button.disabled = false;
+    button.style.opacity = "1";
+    button.style.cursor = "pointer";
+  }
+}
+
+// =================================
+// TIKTOK DISCONNECTED DISPLAY
+// =================================
+
+function showTikTokDisconnected() {
+  const status = document.getElementById("tiktokStatus");
+  const name = document.getElementById("tiktokDisplayName");
+  const openId = document.getElementById("tiktokOpenId");
+  const avatar = document.getElementById("tiktokAvatar");
+  const placeholder = document.getElementById("tiktokAvatarPlaceholder");
+  const message = document.getElementById("tiktokMessage");
+  const button = document.getElementById("connectTikTokBtn");
+
+  status.textContent = "Belum terhubung";
+  status.style.background = "#fef3c7";
+  status.style.color = "#92400e";
+
+  name.textContent = "Belum ada akun terhubung";
+  openId.textContent = "Hubungkan akun TikTok Anda";
+
+  avatar.style.display = "none";
+  placeholder.style.display = "flex";
+
+  message.textContent =
+    "Hubungkan akun TikTok untuk mengintegrasikannya dengan MOTIONSTORY AI.";
+
+  button.textContent = "Hubungkan TikTok";
+  button.disabled = false;
+  button.style.opacity = "1";
+  button.style.cursor = "pointer";
+}
+
+// =================================
+// CONNECT TIKTOK
+// =================================
+
+async function connectTikTok() {
+  const button = document.getElementById("connectTikTokBtn");
+  const message = document.getElementById("tiktokMessage");
+
+  if (!API_TOKEN) {
+    notify("Masukkan API Token terlebih dahulu di Pengaturan API.");
+    showPage("settings");
+    return;
+  }
+
+  try {
+    button.disabled = true;
+    button.textContent = "Menghubungkan...";
+    message.textContent = "Menyiapkan koneksi TikTok...";
+
+    const result = await apiRequest("/api/tiktok/auth", {
+      method: "POST",
+      body: JSON.stringify({})
+    });
+
+    if (!result.auth_url) {
+      throw new Error("URL otorisasi TikTok tidak ditemukan.");
+    }
+
+    window.location.href = result.auth_url;
+
+  } catch (error) {
+    console.error("Gagal menghubungkan TikTok:", error);
+
+    notify("Gagal menghubungkan TikTok: " + error.message);
+
+    button.disabled = false;
+    button.textContent = "Hubungkan TikTok";
+    message.textContent = "Koneksi TikTok belum berhasil dimulai.";
+  }
 }
 
 // =================================
@@ -259,20 +381,12 @@ function showPage(page) {
 document.getElementById("saveSettings").addEventListener(
   "click",
   async function() {
-
     API_TOKEN = document.getElementById("apiToken").value.trim();
 
     if (API_TOKEN) {
-
-      sessionStorage.setItem(
-        "motionstory_token",
-        API_TOKEN
-      );
-
+      sessionStorage.setItem("motionstory_token", API_TOKEN);
     } else {
-
       sessionStorage.removeItem("motionstory_token");
-
     }
 
     const connected = await checkConnection();
@@ -284,8 +398,8 @@ document.getElementById("saveSettings").addEventListener(
 
     if (connected) {
       await loadProjects();
+      await loadTikTokStatus();
     }
-
   }
 );
 
@@ -294,13 +408,9 @@ document.getElementById("saveSettings").addEventListener(
 // =================================
 
 document.querySelectorAll(".nav-item").forEach(button => {
-
   button.addEventListener("click", () => {
-
     showPage(button.dataset.page);
-
   });
-
 });
 
 document.getElementById("newProjectBtn").addEventListener(
@@ -313,20 +423,26 @@ document.getElementById("createFirstProject").addEventListener(
   createProject
 );
 
+document.getElementById("connectTikTokBtn").addEventListener(
+  "click",
+  connectTikTok
+);
+
 // =================================
 // INITIALIZATION
 // =================================
 
 async function initializeApp() {
-
   document.getElementById("apiToken").value = API_TOKEN;
 
   const connected = await checkConnection();
 
   if (connected) {
     await loadProjects();
+    await loadTikTokStatus();
+  } else {
+    showTikTokDisconnected();
   }
-
 }
 
 initializeApp();
