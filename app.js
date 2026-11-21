@@ -1,7 +1,16 @@
+// =================================
+// CONFIGURATION
+// =================================
 
-const API_URL = "https://motionstory-api.ane-you1111.workers.dev";
+const DEFAULT_API_URL =
+  "https://motionstory-api.ane-you1111.workers.dev";
 
-let API_TOKEN = sessionStorage.getItem("motionstory_token") || "";
+let API_URL =
+  localStorage.getItem("motionstory_api_url") || DEFAULT_API_URL;
+
+let API_TOKEN =
+  sessionStorage.getItem("motionstory_token") || "";
+
 let projects = [];
 
 // =================================
@@ -14,7 +23,7 @@ async function apiRequest(endpoint, options = {}) {
   };
 
   if (API_TOKEN) {
-    headers["Authorization"] = `Bearer ${API_TOKEN}`;
+    headers.Authorization = `Bearer ${API_TOKEN}`;
   }
 
   const response = await fetch(API_URL + endpoint, {
@@ -25,10 +34,16 @@ async function apiRequest(endpoint, options = {}) {
     }
   });
 
-  const result = await response.json();
+  let result;
+
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("Respons API bukan JSON yang valid.");
+  }
 
   if (!response.ok || result.ok === false) {
-    throw new Error(result.error || "Permintaan API gagal");
+    throw new Error(result.error || `Permintaan API gagal (${response.status})`);
   }
 
   return result;
@@ -43,6 +58,20 @@ function notify(message) {
 }
 
 // =================================
+// HTML ESCAPE
+// =================================
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+// =================================
 // CONNECTION CHECK
 // =================================
 
@@ -50,19 +79,18 @@ async function checkConnection() {
   try {
     const result = await apiRequest("/api/health");
 
+    const online = result.database === true && result.ai === true;
+
     document.getElementById("apiStatus").textContent =
-      result.database ? "Online" : "Database Error";
+      online ? "Online" : "Periksa Backend";
 
     document.getElementById("connectionStatus").textContent =
-      result.database
-        ? "● Terhubung"
-        : "● Database bermasalah";
+      online ? "● Terhubung" : "● Perlu pemeriksaan";
 
     return true;
 
   } catch (error) {
     document.getElementById("apiStatus").textContent = "Offline";
-
     document.getElementById("connectionStatus").textContent =
       "● Tidak terhubung";
 
@@ -78,9 +106,7 @@ async function checkConnection() {
 async function loadProjects() {
   try {
     const result = await apiRequest("/api/projects");
-
     projects = result.projects || [];
-
     renderProjects();
 
   } catch (error) {
@@ -105,41 +131,67 @@ function renderProjects() {
   const html = projects.length
     ? projects.map(project => `
       <div class="project-card"
-           onclick="openProject('${escapeHTML(project.id)}')">
-
+           data-project-id="${escapeHTML(project.id)}"
+           style="cursor:pointer">
         <h3>${escapeHTML(project.title)}</h3>
-
         <p>${escapeHTML(project.description || "Belum ada deskripsi")}</p>
-
       </div>
     `).join("")
     : "<p>Belum ada proyek.</p>";
 
   document.getElementById("recentProjects").innerHTML = html;
   document.getElementById("allProjects").innerHTML = html;
+
+  document.querySelectorAll("[data-project-id]").forEach(card => {
+    card.addEventListener("click", () => {
+      openProject(card.dataset.projectId);
+    });
+  });
 }
 
 // =================================
-// HTML ESCAPE
+// PAGE NAVIGATION
 // =================================
 
-function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, char => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  })[char]);
+function showPage(page) {
+  const pages = [
+    "dashboard",
+    "generator",
+    "projects",
+    "settings"
+  ];
+
+  pages.forEach(name => {
+    const element = document.getElementById(name + "Page");
+    if (element) {
+      element.classList.toggle("hidden", name !== page);
+    }
+  });
+
+  const titles = {
+    dashboard: "Dashboard",
+    generator: "Generator AI",
+    projects: "Semua Proyek",
+    settings: "Pengaturan API"
+  };
+
+  document.getElementById("pageTitle").textContent =
+    titles[page] || "Dashboard";
+
+  document.querySelectorAll(".nav-item").forEach(button => {
+    button.classList.toggle(
+      "active",
+      button.dataset.page === page
+    );
+  });
 }
 
 // =================================
-// CREATE PROJECT
+// CREATE MANUAL PROJECT
 // =================================
 
 async function createProject() {
   const title = prompt("Masukkan judul proyek:");
-
   if (!title || !title.trim()) return;
 
   const description = prompt("Masukkan deskripsi proyek:") || "";
@@ -180,10 +232,39 @@ async function openProject(id) {
       item => String(item.id) === String(id)
     );
 
-    alert(
-      "PROYEK: " + (project?.title || "MOTIONSTORY AI") +
-      "\nJumlah adegan: " + scenes.length
-    );
+    let html = `
+      <h2>${escapeHTML(project?.title || "Proyek")}</h2>
+      <p>${scenes.length} adegan</p>
+    `;
+
+    if (scenes.length) {
+      html += scenes.map(scene => `
+        <article style="
+          background:#fff;border:1px solid #e5e7eb;border-radius:12px;
+          padding:16px;margin:12px 0
+        ">
+          <h3>Adegan ${escapeHTML(scene.scene_number)}:
+            ${escapeHTML(scene.title || "")}</h3>
+          <p><strong>Narasi:</strong><br>
+            ${escapeHTML(scene.narration || "")}</p>
+          <p><strong>Visual Prompt:</strong><br>
+            ${escapeHTML(scene.visual_prompt || "")}</p>
+          <p><strong>Sound Effect:</strong>
+            ${escapeHTML(scene.sound_effect || "-")}</p>
+          <p><strong>Musik:</strong>
+            ${escapeHTML(scene.music || "-")}</p>
+          <p><strong>Transisi:</strong>
+            ${escapeHTML(scene.transition || "-")}</p>
+          <p><strong>Durasi:</strong>
+            ${escapeHTML(scene.duration || 8)} detik</p>
+        </article>
+      `).join("");
+    } else {
+      html += "<p>Belum ada adegan pada proyek ini.</p>";
+    }
+
+    document.getElementById("generatedResult").innerHTML = html;
+    showPage("generator");
 
   } catch (error) {
     notify("Gagal membuka proyek: " + error.message);
@@ -191,34 +272,149 @@ async function openProject(id) {
 }
 
 // =================================
-// PAGE NAVIGATION
+// AI STORY GENERATOR
 // =================================
 
-function showPage(page) {
-  const pages = [
-    "dashboard",
-    "projects",
-    "settings"
-  ];
+async function generateStory() {
+  const topicInput = document.getElementById("storyTopic");
+  const durationInput = document.getElementById("storyDuration");
+  const button = document.getElementById("generateStoryBtn");
+  const message = document.getElementById("generatorMessage");
+  const output = document.getElementById("generatedResult");
 
-  pages.forEach(name => {
-    const element = document.getElementById(name + "Page");
+  const topic = topicInput.value.trim();
+  const duration = Number(durationInput.value);
 
-    element.classList.toggle("hidden", name !== page);
-  });
+  if (!API_TOKEN) {
+    message.textContent =
+      "Masukkan API Token terlebih dahulu di Pengaturan API.";
+    showPage("settings");
+    return;
+  }
 
-  document.getElementById("pageTitle").textContent =
-    page === "dashboard"
-      ? "Dashboard"
-      : page === "projects"
-      ? "Semua Proyek"
-      : "Pengaturan API";
+  if (!topic) {
+    message.textContent = "Silakan masukkan tema cerita terlebih dahulu.";
+    topicInput.focus();
+    return;
+  }
 
-  document.querySelectorAll(".nav-item").forEach(button => {
-    button.classList.toggle(
-      "active",
-      button.dataset.page === page
-    );
+  if (!Number.isInteger(duration) || duration < 30 || duration > 240) {
+    message.textContent = "Durasi harus antara 30 sampai 240 detik.";
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Sedang membuat cerita...";
+  message.textContent =
+    "AI sedang menyusun cerita dan adegan. Mohon tunggu.";
+  output.innerHTML = "";
+
+  try {
+    const result = await apiRequest("/api/ai/generate", {
+      method: "POST",
+      body: JSON.stringify({
+        topic,
+        duration_seconds: duration
+      })
+    });
+
+    const project = result.project || result;
+    const scenes = result.scenes || project.scenes || [];
+
+    if (!scenes.length) {
+      throw new Error(
+        "AI memberikan respons, tetapi daftar adegan tidak ditemukan."
+      );
+    }
+
+    message.textContent =
+      `Berhasil! ${scenes.length} adegan telah dibuat dan disimpan.`;
+
+    renderGeneratedStory(project, scenes);
+
+    await loadProjects();
+
+  } catch (error) {
+    console.error("Generator AI error:", error);
+
+    message.textContent =
+      "Gagal membuat cerita: " + error.message;
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "✨ Buat Cerita dengan AI";
+  }
+}
+
+// =================================
+// RENDER GENERATED STORY
+// =================================
+
+function renderGeneratedStory(project, scenes) {
+  const output = document.getElementById("generatedResult");
+
+  const title = project.title || "Cerita Motivasi Baru";
+  const description = project.description || "";
+
+  output.innerHTML = `
+    <div style="
+      background:#fff;border:1px solid #e5e7eb;
+      border-radius:16px;padding:22px;margin-bottom:20px
+    ">
+      <p style="color:#6b7280;font-size:12px">
+        HASIL GENERATOR AI
+      </p>
+      <h2>${escapeHTML(title)}</h2>
+      <p>${escapeHTML(description)}</p>
+      <p><strong>Total adegan:</strong> ${scenes.length}</p>
+    </div>
+
+    <h2>Storyboard</h2>
+
+    ${scenes.map((scene, index) => `
+      <article style="
+        background:#fff;border:1px solid #e5e7eb;
+        border-radius:14px;padding:18px;margin:14px 0
+      ">
+        <h3>
+          Adegan ${escapeHTML(scene.scene_number || index + 1)}:
+          ${escapeHTML(scene.title || "Tanpa judul")}
+        </h3>
+
+        <p><strong>Durasi:</strong>
+          ${escapeHTML(scene.duration || 8)} detik</p>
+
+        <div style="margin-top:14px">
+          <strong>Narasi Bahasa Indonesia</strong>
+          <p>${escapeHTML(scene.narration || "-")}</p>
+        </div>
+
+        <div style="margin-top:14px">
+          <strong>Visual Prompt (English)</strong>
+          <p>${escapeHTML(scene.visual_prompt || "-")}</p>
+        </div>
+
+        <div style="margin-top:14px">
+          <strong>Sound Effect</strong>
+          <p>${escapeHTML(scene.sound_effect || "-")}</p>
+        </div>
+
+        <div style="margin-top:14px">
+          <strong>Music</strong>
+          <p>${escapeHTML(scene.music || "-")}</p>
+        </div>
+
+        <div style="margin-top:14px">
+          <strong>Transition</strong>
+          <p>${escapeHTML(scene.transition || "-")}</p>
+        </div>
+      </article>
+    `).join("")}
+  `;
+
+  output.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
   });
 }
 
@@ -254,9 +450,7 @@ async function loadTikTokStatus() {
         account.display_name || "Akun TikTok terhubung";
 
       openId.textContent =
-        account.open_id
-          ? "ID: " + account.open_id
-          : "Akun TikTok berhasil terhubung";
+        account.open_id ? "ID: " + account.open_id : "Akun terhubung";
 
       if (account.avatar_url) {
         avatar.src = account.avatar_url;
@@ -292,7 +486,7 @@ async function loadTikTokStatus() {
     status.style.color = "#92400e";
 
     message.textContent =
-      "Tidak dapat memeriksa akun TikTok. Pastikan API Token sudah benar.";
+      "Tidak dapat memeriksa akun TikTok. Periksa API Token.";
 
     button.textContent = "Coba Lagi";
     button.disabled = false;
@@ -302,7 +496,7 @@ async function loadTikTokStatus() {
 }
 
 // =================================
-// TIKTOK DISCONNECTED DISPLAY
+// TIKTOK DISCONNECTED
 // =================================
 
 function showTikTokDisconnected() {
@@ -313,6 +507,8 @@ function showTikTokDisconnected() {
   const placeholder = document.getElementById("tiktokAvatarPlaceholder");
   const message = document.getElementById("tiktokMessage");
   const button = document.getElementById("connectTikTokBtn");
+
+  if (!status || !button) return;
 
   status.textContent = "Belum terhubung";
   status.style.background = "#fef3c7";
@@ -365,7 +561,6 @@ async function connectTikTok() {
 
   } catch (error) {
     console.error("Gagal menghubungkan TikTok:", error);
-
     notify("Gagal menghubungkan TikTok: " + error.message);
 
     button.disabled = false;
@@ -381,7 +576,27 @@ async function connectTikTok() {
 document.getElementById("saveSettings").addEventListener(
   "click",
   async function() {
-    API_TOKEN = document.getElementById("apiToken").value.trim();
+    const urlInput = document.getElementById("apiUrl");
+    const tokenInput = document.getElementById("apiToken");
+
+    const newUrl = urlInput.value.trim().replace(/\/+$/, "");
+
+    if (!newUrl) {
+      notify("Masukkan API Base URL.");
+      return;
+    }
+
+    try {
+      new URL(newUrl);
+    } catch {
+      notify("Format API URL tidak valid.");
+      return;
+    }
+
+    API_URL = newUrl;
+    API_TOKEN = tokenInput.value.trim();
+
+    localStorage.setItem("motionstory_api_url", API_URL);
 
     if (API_TOKEN) {
       sessionStorage.setItem("motionstory_token", API_TOKEN);
@@ -415,12 +630,17 @@ document.querySelectorAll(".nav-item").forEach(button => {
 
 document.getElementById("newProjectBtn").addEventListener(
   "click",
-  createProject
+  () => showPage("generator")
 );
 
 document.getElementById("createFirstProject").addEventListener(
   "click",
-  createProject
+  () => showPage("generator")
+);
+
+document.getElementById("generateStoryBtn").addEventListener(
+  "click",
+  generateStory
 );
 
 document.getElementById("connectTikTokBtn").addEventListener(
@@ -433,6 +653,7 @@ document.getElementById("connectTikTokBtn").addEventListener(
 // =================================
 
 async function initializeApp() {
+  document.getElementById("apiUrl").value = API_URL;
   document.getElementById("apiToken").value = API_TOKEN;
 
   const connected = await checkConnection();
