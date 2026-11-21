@@ -13,7 +13,6 @@
 <body>
 
   <div class="app-container">
-
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-icon">M</div>
@@ -56,10 +55,14 @@
         </button>
       </header>
 
+      <!-- DASHBOARD -->
       <section id="dashboardPage" class="page">
+
         <div class="welcome">
           <p>SELAMAT DATANG DI MOTIONSTORY AI</p>
+
           <h2>Ubah ide menjadi cerita visual.</h2>
+
           <p>
             Kelola proyek video, susun adegan, dan bangun
             storyboard dalam satu workspace.
@@ -70,7 +73,169 @@
           </button>
         </div>
 
+        <!-- TIKTOK CONNECTION -->
+        <div class="tiktok-card" style="
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
+          border-radius: 16px;
+          padding: 22px;
+          margin: 24px 0;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+        ">
+
+          <div style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+          ">
+
+            <div style="
+              display: flex;
+              align-items: center;
+              gap: 14px;
+            ">
+
+              <div style="
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                background: #111827;
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 27px;
+                font-weight: bold;
+              ">♪</div>
+
+              <div>
+                <h3 style="margin: 0 0 5px;">
+                  Koneksi Akun TikTok
+                </h3>
+
+                <p style="
+                  margin: 0;
+                  color: #6b7280;
+                  font-size: 13px;
+                ">
+                  Hubungkan akun TikTok ke MOTIONSTORY AI
+                </p>
+              </div>
+
+            </div>
+
+            <span id="tiktokStatus" style="
+              background: #fef3c7;
+              color: #92400e;
+              padding: 7px 12px;
+              border-radius: 20px;
+              font-size: 12px;
+              font-weight: 600;
+            ">
+              Belum diperiksa
+            </span>
+
+          </div>
+
+          <div style="
+            border-top: 1px solid #e5e7eb;
+            margin: 20px 0;
+          "></div>
+
+          <div style="
+            display: flex;
+            align-items: center;
+            gap: 14px;
+          ">
+
+            <img
+              id="tiktokAvatar"
+              src=""
+              alt="Foto profil TikTok"
+              style="
+                width: 54px;
+                height: 54px;
+                border-radius: 50%;
+                object-fit: cover;
+                display: none;
+              "
+            >
+
+            <div id="tiktokAvatarPlaceholder" style="
+              width: 54px;
+              height: 54px;
+              border-radius: 50%;
+              background: #f3f4f6;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #9ca3af;
+              font-size: 25px;
+            ">
+              ♪
+            </div>
+
+            <div style="flex: 1; min-width: 0;">
+
+              <strong id="tiktokDisplayName">
+                Belum ada akun terhubung
+              </strong>
+
+              <p id="tiktokOpenId" style="
+                margin: 5px 0 0;
+                color: #9ca3af;
+                font-size: 12px;
+              ">
+                Informasi akun TikTok akan ditampilkan di sini.
+              </p>
+
+            </div>
+
+          </div>
+
+          <p id="tiktokMessage" style="
+            color: #6b7280;
+            font-size: 13px;
+            margin: 18px 0 12px;
+          ">
+            Hubungkan akun TikTok untuk mengintegrasikannya
+            dengan workspace MOTIONSTORY AI.
+          </p>
+
+          <button
+            id="connectTikTokBtn"
+            type="button"
+            disabled
+            style="
+              background: #111827;
+              color: #ffffff;
+              border: none;
+              border-radius: 9px;
+              padding: 11px 18px;
+              font-weight: 600;
+              opacity: 0.65;
+              cursor: not-allowed;
+            "
+          >
+            Hubungkan TikTok
+          </button>
+
+          <p style="
+            color: #9ca3af;
+            font-size: 11px;
+            margin: 12px 0 0;
+          ">
+            Tombol akan diaktifkan setelah integrasi frontend selesai.
+          </p>
+
+        </div>
+        <!-- END TIKTOK CONNECTION -->
+
+        <!-- STATISTICS -->
         <div class="stats">
+
           <div class="stat-card">
             <span>Total Proyek</span>
             <strong id="totalProjects">0</strong>
@@ -85,6 +250,7 @@
             <span>Status API</span>
             <strong id="apiStatus">Offline</strong>
           </div>
+
         </div>
 
         <div class="section-heading">
@@ -94,19 +260,27 @@
         <div id="recentProjects">
           <p>Belum ada proyek yang dimuat.</p>
         </div>
+
       </section>
 
+      <!-- ALL PROJECTS -->
       <section id="projectsPage" class="page hidden">
+
         <h2>Semua Proyek</h2>
+
         <div id="allProjects">
           <p>Memuat proyek...</p>
         </div>
+
       </section>
 
+      <!-- API SETTINGS -->
       <section id="settingsPage" class="page hidden">
+
         <h2>Pengaturan API</h2>
 
         <label for="apiUrl">API Base URL</label>
+
         <input
           id="apiUrl"
           type="url"
@@ -114,6 +288,7 @@
         >
 
         <label for="apiToken">API Token</label>
+
         <input
           id="apiToken"
           type="password"
@@ -125,22 +300,29 @@
         </button>
 
         <p id="settingsMessage"></p>
+
       </section>
 
     </main>
   </div>
 
+  <!-- FOOTER -->
   <footer class="legal-footer">
+
     <div class="legal-footer-content">
+
       <span>© 2026 MOTIONSTORY AI</span>
 
       <div class="legal-links">
         <a href="terms.html">Terms of Service</a>
         <a href="privacy.html">Privacy Policy</a>
       </div>
+
     </div>
+
   </footer>
 
+  <!-- EXISTING JAVASCRIPT -->
   <script src="app.js"></script>
 
 </body>
