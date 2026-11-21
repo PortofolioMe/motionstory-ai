@@ -346,6 +346,7 @@ async function generateStory() {
   }
 }
 
+
 // =================================
 // RENDER GENERATED STORY
 // =================================
@@ -358,56 +359,131 @@ function renderGeneratedStory(project, scenes) {
 
   output.innerHTML = `
     <div style="
-      background:#fff;border:1px solid #e5e7eb;
-      border-radius:16px;padding:22px;margin-bottom:20px
+      background:#171e32;
+      color:#f4f6ff;
+      border:1px solid #35415f;
+      border-radius:16px;
+      padding:22px;
+      margin-bottom:20px;
     ">
-      <p style="color:#6b7280;font-size:12px">
+      <p style="color:#54d5e8;font-size:12px;font-weight:700;letter-spacing:1px">
         HASIL GENERATOR AI
       </p>
-      <h2>${escapeHTML(title)}</h2>
-      <p>${escapeHTML(description)}</p>
-      <p><strong>Total adegan:</strong> ${scenes.length}</p>
+
+      <h2 style="color:#ffffff;margin:10px 0">
+        ${escapeHTML(title)}
+      </h2>
+
+      <p style="color:#cbd3e8;line-height:1.7">
+        ${escapeHTML(description)}
+      </p>
+
+      <p style="color:#54d5e8">
+        <strong>Total adegan:</strong> ${scenes.length}
+      </p>
     </div>
 
-    <h2>Storyboard</h2>
+    <h2 style="color:#ffffff;margin:25px 0 15px">
+      Storyboard
+    </h2>
 
     ${scenes.map((scene, index) => `
       <article style="
-        background:#fff;border:1px solid #e5e7eb;
-        border-radius:14px;padding:18px;margin:14px 0
+        background:#171e32;
+        color:#f4f6ff;
+        border:1px solid #35415f;
+        border-radius:14px;
+        padding:20px;
+        margin:14px 0;
       ">
-        <h3>
+
+        <h3 style="color:#ffffff;margin-top:0">
           Adegan ${escapeHTML(scene.scene_number || index + 1)}:
           ${escapeHTML(scene.title || "Tanpa judul")}
         </h3>
 
-        <p><strong>Durasi:</strong>
-          ${escapeHTML(scene.duration || 8)} detik</p>
+        <p style="color:#54d5e8">
+          <strong>Durasi:</strong>
+          <span style="color:#ffffff">
+            ${escapeHTML(scene.duration || 8)} detik
+          </span>
+        </p>
 
-        <div style="margin-top:14px">
-          <strong>Narasi Bahasa Indonesia</strong>
-          <p>${escapeHTML(scene.narration || "-")}</p>
+        <div style="
+          background:#101628;
+          border:1px solid #28314b;
+          border-radius:10px;
+          padding:15px;
+          margin-top:14px;
+        ">
+          <strong style="color:#54d5e8">
+            Narasi Bahasa Indonesia
+          </strong>
+          <p style="color:#f4f6ff;line-height:1.8;margin-bottom:0">
+            ${escapeHTML(scene.narration || "-")}
+          </p>
         </div>
 
-        <div style="margin-top:14px">
-          <strong>Visual Prompt (English)</strong>
-          <p>${escapeHTML(scene.visual_prompt || "-")}</p>
+        <div style="
+          background:#101628;
+          border:1px solid #28314b;
+          border-radius:10px;
+          padding:15px;
+          margin-top:12px;
+        ">
+          <strong style="color:#54d5e8">
+            Visual Prompt (English)
+          </strong>
+          <p style="color:#e0e6f5;line-height:1.8;margin-bottom:0">
+            ${escapeHTML(scene.visual_prompt || "-")}
+          </p>
         </div>
 
-        <div style="margin-top:14px">
-          <strong>Sound Effect</strong>
-          <p>${escapeHTML(scene.sound_effect || "-")}</p>
+        <div style="
+          background:#101628;
+          border:1px solid #28314b;
+          border-radius:10px;
+          padding:15px;
+          margin-top:12px;
+        ">
+          <strong style="color:#54d5e8">
+            Sound Effect
+          </strong>
+          <p style="color:#e0e6f5;margin-bottom:0">
+            ${escapeHTML(scene.sound_effect || "-")}
+          </p>
         </div>
 
-        <div style="margin-top:14px">
-          <strong>Music</strong>
-          <p>${escapeHTML(scene.music || "-")}</p>
+        <div style="
+          background:#101628;
+          border:1px solid #28314b;
+          border-radius:10px;
+          padding:15px;
+          margin-top:12px;
+        ">
+          <strong style="color:#54d5e8">
+            Music
+          </strong>
+          <p style="color:#e0e6f5;margin-bottom:0">
+            ${escapeHTML(scene.music || "-")}
+          </p>
         </div>
 
-        <div style="margin-top:14px">
-          <strong>Transition</strong>
-          <p>${escapeHTML(scene.transition || "-")}</p>
+        <div style="
+          background:#101628;
+          border:1px solid #28314b;
+          border-radius:10px;
+          padding:15px;
+          margin-top:12px;
+        ">
+          <strong style="color:#54d5e8">
+            Transition
+          </strong>
+          <p style="color:#e0e6f5;margin-bottom:0">
+            ${escapeHTML(scene.transition || "-")}
+          </p>
         </div>
+
       </article>
     `).join("")}
   `;
@@ -421,6 +497,7 @@ function renderGeneratedStory(project, scenes) {
 // =================================
 // TIKTOK STATUS
 // =================================
+
 
 async function loadTikTokStatus() {
   const status = document.getElementById("tiktokStatus");
