@@ -378,3 +378,140 @@ nav {
     grid-template-columns: 1fr;
   }
 }
+
+/* =================================
+   GENERATOR AI - FORM TEMA CERITA
+================================= */
+
+#generatorPage {
+  color: #f4f6ff !important;
+}
+
+#generatorPage h1,
+#generatorPage h2,
+#generatorPage h3 {
+  color: #ffffff !important;
+}
+
+#generatorPage p {
+  color: #cbd3e8;
+  line-height: 1.7;
+}
+
+/* Panel Generator */
+
+#generatorPage .generator-card,
+#generatorPage .form-card,
+#generatorPage .card,
+#generatorPage form {
+  background: #171e32 !important;
+  color: #f4f6ff !important;
+  border: 1px solid #35415f !important;
+  border-radius: 15px;
+  padding: 22px;
+}
+
+/* Label */
+
+#generatorPage label {
+  display: block;
+  color: #54d5e8 !important;
+  font-weight: 600;
+  font-size: 13px;
+  margin: 18px 0 9px;
+}
+
+/* Input Tema */
+
+#storyTopic {
+  width: 100%;
+  min-height: 120px;
+  padding: 15px;
+  background: #101628 !important;
+  color: #ffffff !important;
+  border: 1px solid #35415f !important;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  line-height: 1.7;
+}
+
+/* Pilihan Durasi */
+
+#storyDuration {
+  width: 100%;
+  padding: 13px 15px;
+  background: #101628 !important;
+  color: #ffffff !important;
+  border: 1px solid #35415f !important;
+  border-radius: 9px;
+}
+
+/* Warna pilihan dropdown */
+
+#storyDuration option {
+  background: #101628 !important;
+  color: #ffffff !important;
+}
+
+/* Fokus Input */
+
+#storyTopic:focus,
+#storyDuration:focus {
+  outline: none;
+  border-color: #8b75ff !important;
+  box-shadow: 0 0 0 3px #8b75ff22;
+}
+
+/* Tombol Buat Cerita */
+
+#generateStoryBtn {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 14px 22px;
+  background: linear-gradient(110deg, #806bfa, #5c8af6) !important;
+  color: #ffffff !important;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+#generateStoryBtn:hover {
+  filter: brightness(1.15);
+  transform: translateY(-2px);
+}
+
+/* Pesan Berhasil / Error */
+
+#generatorMessage {
+  margin-top: 18px;
+  padding: 13px 16px;
+  background: #12352f !important;
+  color: #70e6b5 !important;
+  border: 1px solid #246b55 !important;
+  border-radius: 9px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Placeholder */
+
+#storyTopic::placeholder {
+  color: #8994ad !important;
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  #generatorPage .generator-card,
+  #generatorPage .form-card,
+  #generatorPage .card,
+  #generatorPage form {
+    padding: 16px;
+  }
+
+  #generateStoryBtn {
+    width: 100%;
+  }
+}
