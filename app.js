@@ -347,6 +347,7 @@ async function generateStory() {
 }
 
 
+
 // =================================
 // RENDER GENERATED STORY
 // =================================
@@ -497,6 +498,7 @@ function renderGeneratedStory(project, scenes) {
 // =================================
 // TIKTOK STATUS
 // =================================
+
 
 
 async function loadTikTokStatus() {
