@@ -1,147 +1,512 @@
 
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#101426">
 
-  <title>MOTIONSTORY AI</title>
+  <title>MOTIONSTORY AI - AI Video Creation Studio</title>
 
-  <link rel="stylesheet" href="styles.css">
+  <meta name="description" content="MOTIONSTORY AI is a creative workspace for planning motivational stories, organizing visual scenes, and producing engaging videos with AI-assisted tools.">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f8fc;
+      color: #182033;
+      line-height: 1.7;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1120px;
+      margin: auto;
+    }
+
+    header {
+      background: #101426;
+      color: white;
+      padding: 20px 0;
+    }
+
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .logo {
+      font-size: 21px;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .logo span {
+      color: #60a5fa;
+    }
+
+    nav {
+      display: flex;
+      gap: 22px;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: #dbe3f5;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      color: white;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #101426, #202e52);
+      color: white;
+      padding: 105px 0;
+      text-align: center;
+    }
+
+    .hero-label {
+      color: #93c5fd;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-size: clamp(34px, 6vw, 58px);
+      line-height: 1.15;
+      max-width: 850px;
+      margin: 0 auto 22px;
+    }
+
+    .hero p {
+      max-width: 700px;
+      margin: 0 auto 30px;
+      color: #cbd5e1;
+      font-size: 17px;
+    }
+
+    .button {
+      display: inline-block;
+      background: #3b82f6;
+      color: white;
+      padding: 13px 27px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .button:hover {
+      background: #2563eb;
+    }
+
+    .section {
+      padding: 75px 0;
+    }
+
+    .section-heading {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .section-heading h2 {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .section-heading p {
+      color: #64748b;
+      max-width: 650px;
+      margin: auto;
+    }
+
+    .about {
+      max-width: 850px;
+      margin: auto;
+      text-align: center;
+      color: #475569;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 22px;
+    }
+
+    .feature-card {
+      background: white;
+      padding: 28px;
+      border: 1px solid #e2e8f0;
+      border-radius: 13px;
+    }
+
+    .feature-icon {
+      font-size: 30px;
+      margin-bottom: 12px;
+    }
+
+    .feature-card h3 {
+      margin-bottom: 8px;
+      color: #182033;
+    }
+
+    .feature-card p {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .workflow {
+      background: #101426;
+      color: white;
+    }
+
+    .workflow .section-heading p {
+      color: #cbd5e1;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .step {
+      padding: 25px;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      background: #1b2540;
+    }
+
+    .step-number {
+      color: #60a5fa;
+      font-size: 25px;
+      font-weight: bold;
+    }
+
+    .step p {
+      color: #cbd5e1;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+
+    .cta {
+      text-align: center;
+      background: #eaf1ff;
+      padding: 70px 20px;
+    }
+
+    .cta h2 {
+      font-size: 30px;
+      margin-bottom: 12px;
+    }
+
+    .cta p {
+      color: #64748b;
+      margin-bottom: 25px;
+    }
+
+    footer {
+      background: #101426;
+      color: #cbd5e1;
+      padding: 30px 0;
+    }
+
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 18px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: #93c5fd;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .footer-links a:hover {
+      text-decoration: underline;
+    }
+
+    .copyright {
+      font-size: 13px;
+    }
+
+    @media (max-width: 700px) {
+      .navbar {
+        flex-direction: column;
+      }
+
+      nav {
+        justify-content: center;
+      }
+
+      .hero {
+        padding: 75px 0;
+      }
+
+      .features,
+      .steps {
+        grid-template-columns: 1fr;
+      }
+
+      .section-heading h2 {
+        font-size: 27px;
+      }
+
+      .footer-content {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .footer-links {
+        justify-content: center;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-  <div class="app-container">
+  <header>
+    <div class="container navbar">
 
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-icon">M</div>
-        <div>
-          <h2>MOTIONSTORY <span>AI</span></h2>
-          <small>PERSONAL WORKSPACE</small>
-        </div>
+      <div class="logo">
+        MOTIONSTORY <span>AI</span>
       </div>
 
       <nav>
-        <button class="nav-item active" data-page="dashboard">
-          Dashboard
-        </button>
-
-        <button class="nav-item" data-page="projects">
-          Semua Proyek
-        </button>
-
-        <button class="nav-item" data-page="settings">
-          Pengaturan API
-        </button>
+        <a href="#about">About</a>
+        <a href="#features">Features</a>
+        <a href="#workflow">How It Works</a>
+        <a href="#contact">Contact</a>
       </nav>
 
-      <div class="sidebar-footer">
-        <span id="connectionStatus">● Belum terhubung</span>
-        <small>Version 1.0</small>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="hero">
+      <div class="container">
+
+        <div class="hero-label">
+          PERSONAL AI CREATIVE WORKSPACE
+        </div>
+
+        <h1>
+          Create Meaningful Videos with AI-Assisted Storytelling
+        </h1>
+
+        <p>
+          MOTIONSTORY AI is a creative workspace designed to help
+          users develop motivational stories, organize visual scenes,
+          and manage video production in one place.
+        </p>
+
+        <a class="button" href="studio.html">
+          Open Creative Studio
+        </a>
+
       </div>
-    </aside>
+    </section>
 
-    <main class="main-content">
-
-      <header class="topbar">
-        <div>
-          <p>PERSONAL CREATIVE STUDIO</p>
-          <h1 id="pageTitle">Dashboard</h1>
-        </div>
-
-        <button id="newProjectBtn">
-          + Proyek Baru
-        </button>
-      </header>
-
-      <section id="dashboardPage" class="page">
-        <div class="welcome">
-          <p>SELAMAT DATANG DI MOTIONSTORY AI</p>
-          <h2>Ubah ide menjadi cerita visual.</h2>
-          <p>
-            Kelola proyek video, susun adegan, dan bangun
-            storyboard dalam satu workspace.
-          </p>
-
-          <button id="createFirstProject">
-            + Buat Proyek Pertama
-          </button>
-        </div>
-
-        <div class="stats">
-          <div class="stat-card">
-            <span>Total Proyek</span>
-            <strong id="totalProjects">0</strong>
-          </div>
-
-          <div class="stat-card">
-            <span>Total Adegan</span>
-            <strong id="totalScenes">0</strong>
-          </div>
-
-          <div class="stat-card">
-            <span>Status API</span>
-            <strong id="apiStatus">Offline</strong>
-          </div>
-        </div>
+    <section class="section" id="about">
+      <div class="container">
 
         <div class="section-heading">
-          <h2>Proyek Terbaru</h2>
+          <h2>About MOTIONSTORY AI</h2>
+          <p>
+            A workspace built to simplify the creative video production process.
+          </p>
         </div>
 
-        <div id="recentProjects">
-          <p>Belum ada proyek yang dimuat.</p>
+        <div class="about">
+          <p>
+            MOTIONSTORY AI is a personal creative workspace focused on
+            motivational video content. It provides an organized environment
+            for developing ideas, writing scripts, planning scenes, and
+            managing video projects.
+          </p>
+
+          <p style="margin-top:15px;">
+            The platform is designed to bring different stages of creative
+            production into a single workflow, helping users organize their
+            storytelling process more efficiently.
+          </p>
         </div>
-      </section>
 
-      <section id="projectsPage" class="page hidden">
-        <h2>Semua Proyek</h2>
-        <div id="allProjects">
-          <p>Memuat proyek...</p>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="container">
+
+        <div class="section-heading">
+          <h2>Our Features</h2>
+          <p>
+            Tools designed to support the creative video production workflow.
+          </p>
         </div>
-      </section>
 
-      <section id="settingsPage" class="page hidden">
-        <h2>Pengaturan API</h2>
+        <div class="features">
 
-        <label for="apiUrl">API Base URL</label>
-        <input
-          id="apiUrl"
-          type="url"
-          value="https://motionstory-api.ane-you1111.workers.dev"
-        >
+          <div class="feature-card">
+            <div class="feature-icon">✍️</div>
+            <h3>Story Development</h3>
+            <p>
+              Organize motivational ideas and develop structured
+              storytelling concepts for video projects.
+            </p>
+          </div>
 
-        <label for="apiToken">API Token</label>
-        <input
-          id="apiToken"
-          type="password"
-          placeholder="Masukkan API Token"
-        >
+          <div class="feature-card">
+            <div class="feature-icon">🎬</div>
+            <h3>Scene Management</h3>
+            <p>
+              Arrange scenes, descriptions, and visual directions
+              in an organized storyboard workflow.
+            </p>
+          </div>
 
-        <button id="saveSettings">
-          Simpan dan Tes Koneksi
-        </button>
+          <div class="feature-card">
+            <div class="feature-icon">🖼️</div>
+            <h3>Visual Planning</h3>
+            <p>
+              Plan visual concepts and backgrounds that support
+              the message and atmosphere of each story.
+            </p>
+          </div>
 
-        <p id="settingsMessage"></p>
-      </section>
+          <div class="feature-card">
+            <div class="feature-icon">🎵</div>
+            <h3>Audio Planning</h3>
+            <p>
+              Organize music and sound-effect ideas to complement
+              the storytelling experience.
+            </p>
+          </div>
 
-    </main>
-  </div>
+          <div class="feature-card">
+            <div class="feature-icon">📹</div>
+            <h3>Video Production</h3>
+            <p>
+              Manage video project information and prepare creative
+              assets for the production process.
+            </p>
+          </div>
 
-  <footer class="legal-footer">
-    <div class="legal-footer-content">
-      <span>© 2026 MOTIONSTORY AI</span>
+          <div class="feature-card">
+            <div class="feature-icon">📱</div>
+            <h3>Social Media Workflow</h3>
+            <p>
+              Prepare video content and publishing materials
+              for social media platforms.
+            </p>
+          </div>
 
-      <div class="legal-links">
+        </div>
+
+      </div>
+    </section>
+
+    <section class="section workflow" id="workflow">
+      <div class="container">
+
+        <div class="section-heading">
+          <h2>How It Works</h2>
+          <p>
+            A simple workflow for organizing creative video projects.
+          </p>
+        </div>
+
+        <div class="steps">
+
+          <div class="step">
+            <div class="step-number">01</div>
+            <h3>Develop Your Idea</h3>
+            <p>
+              Start with a motivational topic or storytelling concept.
+            </p>
+          </div>
+
+          <div class="step">
+            <div class="step-number">02</div>
+            <h3>Organize Your Scenes</h3>
+            <p>
+              Structure your story into scenes and plan the visual direction.
+            </p>
+          </div>
+
+          <div class="step">
+            <div class="step-number">03</div>
+            <h3>Manage Your Project</h3>
+            <p>
+              Keep your creative projects and production materials organized.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <section class="cta" id="contact">
+      <div class="container">
+
+        <h2>Start Your Creative Journey</h2>
+
+        <p>
+          Explore the MOTIONSTORY AI creative workspace.
+        </p>
+
+        <a class="button" href="studio.html">
+          Enter MOTIONSTORY AI
+        </a>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="container footer-content">
+
+      <div class="copyright">
+        © 2026 MOTIONSTORY AI. All rights reserved.
+      </div>
+
+      <div class="footer-links">
         <a href="terms.html">Terms of Service</a>
         <a href="privacy.html">Privacy Policy</a>
+        <a href="studio.html">Creative Studio</a>
       </div>
+
     </div>
   </footer>
-
-  <script src="app.js"></script>
 
 </body>
 </html>
