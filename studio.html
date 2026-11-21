@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -54,53 +55,58 @@
 
         <!-- TIKTOK -->
         <div class="tiktok-card" style="
-          background:#fff;border:1px solid #e5e7eb;border-radius:16px;
-          padding:22px;margin:24px 0;box-shadow:0 4px 16px rgba(0,0,0,.04);
+          background:#171e32;
+          color:#f4f6ff;
+          border:1px solid #35415f;
+          border-radius:16px;
+          padding:22px;
+          margin:24px 0;
+          box-shadow:0 4px 16px rgba(0,0,0,.15);
         ">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
             <div style="display:flex;align-items:center;gap:14px">
               <div style="
-                width:48px;height:48px;border-radius:12px;background:#111827;
+                width:48px;height:48px;border-radius:12px;background:#101628;
                 color:white;display:flex;align-items:center;justify-content:center;
                 font-size:27px;font-weight:bold
               ">♪</div>
               <div>
-                <h3 style="margin:0 0 5px">Koneksi Akun TikTok</h3>
-                <p style="margin:0;color:#6b7280;font-size:13px">
+                <h3 style="margin:0 0 5px;color:#ffffff">Koneksi Akun TikTok</h3>
+                <p style="margin:0;color:#cbd3e8;font-size:13px">
                   Hubungkan akun TikTok ke MOTIONSTORY AI
                 </p>
               </div>
             </div>
             <span id="tiktokStatus" style="
-              background:#fef3c7;color:#92400e;padding:7px 12px;
+              background:#3b3420;color:#fcd978;padding:7px 12px;
               border-radius:20px;font-size:12px;font-weight:600
             ">Belum diperiksa</span>
           </div>
 
-          <div style="border-top:1px solid #e5e7eb;margin:20px 0"></div>
+          <div style="border-top:1px solid #35415f;margin:20px 0"></div>
 
           <div style="display:flex;align-items:center;gap:14px">
             <img id="tiktokAvatar" src="" alt="Foto profil TikTok"
               style="width:54px;height:54px;border-radius:50%;object-fit:cover;display:none">
             <div id="tiktokAvatarPlaceholder" style="
-              width:54px;height:54px;border-radius:50%;background:#f3f4f6;
+              width:54px;height:54px;border-radius:50%;background:#28314b;
               display:flex;align-items:center;justify-content:center;
-              color:#9ca3af;font-size:25px
+              color:#d5dced;font-size:25px
             ">♪</div>
             <div style="flex:1;min-width:0">
-              <strong id="tiktokDisplayName">Belum ada akun terhubung</strong>
-              <p id="tiktokOpenId" style="margin:5px 0 0;color:#9ca3af;font-size:12px">
+              <strong id="tiktokDisplayName" style="color:#ffffff">Belum ada akun terhubung</strong>
+              <p id="tiktokOpenId" style="margin:5px 0 0;color:#9aa5c0;font-size:12px">
                 Informasi akun TikTok akan ditampilkan di sini.
               </p>
             </div>
           </div>
 
-          <p id="tiktokMessage" style="color:#6b7280;font-size:13px;margin:18px 0 12px">
+          <p id="tiktokMessage" style="color:#cbd3e8;font-size:13px;margin:18px 0 12px">
             Hubungkan akun TikTok untuk mengintegrasikannya dengan workspace.
           </p>
 
           <button id="connectTikTokBtn" type="button" disabled style="
-            background:#111827;color:#fff;border:0;border-radius:9px;
+            background:#28314b;color:#fff;border:0;border-radius:9px;
             padding:11px 18px;font-weight:600;opacity:.65;cursor:not-allowed
           ">Hubungkan TikTok</button>
         </div>
@@ -133,17 +139,30 @@
         </p>
 
         <div class="generator-card" style="
-          background:#fff;border:1px solid #e5e7eb;border-radius:16px;
-          padding:22px;margin:20px 0
+          background:#171e32;
+          color:#f4f6ff;
+          border:1px solid #35415f;
+          border-radius:16px;
+          padding:22px;
+          margin:20px 0;
+          box-shadow:0 4px 16px rgba(0,0,0,.15);
         ">
           <label for="storyTopic"><strong>Tema atau ide cerita</strong></label>
           <textarea id="storyTopic" rows="4"
             placeholder="Contoh: Seseorang yang selalu diremehkan, tetapi tidak menyerah mengejar impiannya."
-            style="width:100%;box-sizing:border-box;margin:10px 0 18px;padding:12px;border:1px solid #d1d5db;border-radius:9px"></textarea>
+            style="
+              width:100%;box-sizing:border-box;margin:10px 0 18px;
+              padding:12px;border:1px solid #35415f;border-radius:9px;
+              background:#101628;color:#ffffff;font-family:inherit;
+            "></textarea>
 
           <label for="storyDuration"><strong>Durasi video</strong></label>
           <select id="storyDuration"
-            style="display:block;width:100%;margin:10px 0 18px;padding:12px;border:1px solid #d1d5db;border-radius:9px">
+            style="
+              display:block;width:100%;margin:10px 0 18px;
+              padding:12px;border:1px solid #35415f;border-radius:9px;
+              background:#101628;color:#ffffff;
+            ">
             <option value="30">30 detik</option>
             <option value="60" selected>60 detik</option>
             <option value="90">90 detik</option>
@@ -192,6 +211,6 @@
     </div>
   </footer>
 
-  <script src="app.js?v=20261121-3"></script>
+  <script src="app.js?v=20261122-1"></script>
 </body>
 </html>
