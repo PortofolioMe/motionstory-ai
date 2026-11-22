@@ -128,13 +128,16 @@ async function loadProjects() {
   }
 }
 
-// =================================
-// PROJECT CARD
-// =================================
+
+ // =================================
+ // PROJECT CARD
+ // =================================
+
 
 function renderProjectCard(project) {
   const id = escapeHTML(project.id);
   const title = escapeHTML(project.title);
+
   const description = escapeHTML(
     project.description || "Belum ada deskripsi."
   );
@@ -155,7 +158,6 @@ function renderProjectCard(project) {
       border:1px solid #35415f;
       border-radius:14px;
     ">
-
       <div style="flex:1;min-width:180px">
         <h3 style="color:#ffffff;margin:0 0 8px">
           ${title}
@@ -177,24 +179,20 @@ function renderProjectCard(project) {
         </span>
       </div>
 
-      <div style="
-        display:flex;
-        flex-wrap:wrap;
-        gap:9px;
-      ">
+      <div style="display:flex;flex-wrap:wrap;gap:9px">
+        <button
+          type="button"
+          data-add-queue="${id}"
+          data-project-title="${title}"
+          style="background:#16a085;color:white;border:0;border-radius:8px;padding:10px 16px;font-weight:600;cursor:pointer"
+        >
+          + Tambah ke Antrean
+        </button>
 
         <button
           type="button"
           data-open-project="${id}"
-          style="
-            background:#7865e9;
-            color:#ffffff;
-            border:0;
-            border-radius:8px;
-            padding:10px 16px;
-            font-weight:600;
-            cursor:pointer;
-          "
+          style="background:#7865e9;color:white;border:0;border-radius:8px;padding:10px 16px;font-weight:600;cursor:pointer"
         >
           Buka
         </button>
@@ -203,19 +201,10 @@ function renderProjectCard(project) {
           type="button"
           data-delete-project="${id}"
           data-project-title="${title}"
-          style="
-            background:#8f3548;
-            color:#ffffff;
-            border:0;
-            border-radius:8px;
-            padding:10px 16px;
-            font-weight:600;
-            cursor:pointer;
-          "
+          style="background:#8f3548;color:white;border:0;border-radius:8px;padding:10px 16px;font-weight:600;cursor:pointer"
         >
           Hapus
         </button>
-
       </div>
     </div>
   `;
@@ -248,11 +237,38 @@ function renderProjects() {
   document.getElementById("allProjects").innerHTML = html;
 }
 
+
 // =================================
 // PROJECT BUTTON EVENTS
 // =================================
 
 async function handleProjectAction(event) {
+
+  // =================================
+  // TOMBOL TAMBAH KE ANTREAN
+  // =================================
+
+  const queueButton = event.target.closest(
+    "[data-add-queue]"
+  );
+
+  if (queueButton) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    await addProjectToQueue(
+      queueButton.dataset.addQueue,
+      queueButton.dataset.projectTitle,
+      queueButton
+    );
+
+    return;
+  }
+
+  // =================================
+  // TOMBOL HAPUS
+  // =================================
+
   const deleteButton = event.target.closest(
     "[data-delete-project]"
   );
@@ -268,12 +284,17 @@ async function handleProjectAction(event) {
     return;
   }
 
+  // =================================
+  // TOMBOL BUKA
+  // =================================
+
   const openButton = event.target.closest(
     "[data-open-project]"
   );
 
   if (openButton) {
     event.preventDefault();
+    event.stopPropagation();
 
     const id = openButton.dataset.openProject;
 
@@ -281,11 +302,91 @@ async function handleProjectAction(event) {
   }
 }
 
+
+// =================================
+// ADD PROJECT TO QUEUE
+// =================================
+
+async function addProjectToQueue(id, title, button) {
+
+  if (!id) {
+    notify("ID proyek tidak ditemukan.");
+    return;
+  }
+
+  const scheduledAt = prompt(
+    `Masukkan jadwal untuk "${title}".\n\n` +
+    "Format: YYYY-MM-DDTHH:mm\n" +
+    "Contoh: 2026-11-23T09:00"
+  );
+
+  if (!scheduledAt) return;
+
+  if (Number.isNaN(Date.parse(scheduledAt))) {
+    notify("Format jadwal tidak valid.");
+    return;
+  }
+
+  if (new Date(scheduledAt).getTime() <= Date.now()) {
+    notify("Jadwal harus berada di masa depan.");
+    return;
+  }
+
+  const caption = prompt(
+    "Masukkan caption (opsional):"
+  ) || "";
+
+  const originalText = button.textContent;
+
+  button.disabled = true;
+  button.textContent = "Menambahkan...";
+
+  try {
+    const result = await apiRequest(
+      "/api/automation/queue",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          project_id: id,
+          scheduled_at: scheduledAt,
+          caption: caption
+        })
+      }
+    );
+
+    notify(
+      result.message ||
+      "Konten berhasil masuk antrean."
+    );
+
+    if (typeof loadAutomationDashboard === "function") {
+      await loadAutomationDashboard();
+    }
+
+  } catch (error) {
+    console.error(
+      "Gagal menambahkan antrean:",
+      error
+    );
+
+    notify(
+      "Gagal menambahkan antrean: " +
+      error.message
+    );
+
+  } finally {
+    button.disabled = false;
+    button.textContent = originalText;
+  }
+}
+
+
 // =================================
 // DELETE PROJECT
 // =================================
 
 async function deleteProject(id, title, button) {
+
   if (!id) {
     notify("ID proyek tidak ditemukan.");
     return;
@@ -324,20 +425,30 @@ async function deleteProject(id, title, button) {
     // sedang ditampilkan.
     const output = document.getElementById("generatedResult");
 
-    if (output && output.dataset.projectId === String(id)) {
+    if (
+      output &&
+      output.dataset.projectId === String(id)
+    ) {
       output.innerHTML = "";
       output.dataset.projectId = "";
     }
 
   } catch (error) {
-    console.error("Gagal menghapus proyek:", error);
+    console.error(
+      "Gagal menghapus proyek:",
+      error
+    );
 
-    notify("Gagal menghapus proyek: " + error.message);
+    notify(
+      "Gagal menghapus proyek: " +
+      error.message
+    );
 
     button.disabled = false;
     button.textContent = originalText;
   }
 }
+
 
 // =================================
 // PAGE NAVIGATION
