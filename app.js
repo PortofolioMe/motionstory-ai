@@ -1040,3 +1040,323 @@ async function initializeApp() {
 }
 
 initializeApp();
+
+// =================================
+// MOTIONSTORY AI - GENERATOR GAMBAR
+// =================================
+
+function renderImageGenerationPanel(projectId, scenes) {
+  const output = document.getElementById("generatedResult");
+
+  if (!output || !projectId || !scenes.length) return;
+
+  const sceneCards = scenes.map((scene, index) => {
+    const sceneId = escapeHTML(scene.id);
+    const imageUrl = scene.image_url || "";
+    const safeUrl = imageUrl.startsWith("https://")
+      ? escapeHTML(imageUrl)
+      : "";
+
+    return `
+      <div style="
+        background:#101628;
+        border:1px solid #35415f;
+        border-radius:12px;
+        padding:16px;
+        margin:12px 0;
+      ">
+        <h3 style="color:#ffffff">
+          Gambar Adegan ${index + 1}
+        </h3>
+
+        <div id="sceneImagePreview-${sceneId}">
+          ${safeUrl ? `
+            <img
+              src="${safeUrl}"
+              alt="Gambar adegan ${index + 1}"
+              style="
+                width:100%;
+                max-width:420px;
+                border-radius:10px;
+                display:block;
+                margin:12px 0;
+              "
+            >
+          ` : `
+            <p style="color:#aeb9d2">
+              Gambar belum dibuat.
+            </p>
+          `}
+        </div>
+
+        <p
+          id="sceneImageStatus-${sceneId}"
+          style="color:#aeb9d2"
+        >
+          ${safeUrl ? "Gambar sudah tersedia." : "Menunggu proses."}
+        </p>
+
+        <button
+          type="button"
+          data-generate-scene-image="${sceneId}"
+          style="
+            background:#7865e9;
+            color:white;
+            border:0;
+            border-radius:8px;
+            padding:10px 16px;
+            cursor:pointer;
+          "
+        >
+          Buat Gambar Adegan
+        </button>
+      </div>
+    `;
+  }).join("");
+
+  output.insertAdjacentHTML("beforeend", `
+    <section
+      id="imageGenerationPanel"
+      style="
+        background:#171e32;
+        border:1px solid #35415f;
+        border-radius:14px;
+        padding:20px;
+        margin-top:24px;
+      "
+    >
+      <h2 style="color:#ffffff">
+        GENERATOR GAMBAR AI
+      </h2>
+
+      <p style="color:#cbd3e8">
+        Buat gambar untuk seluruh adegan menggunakan FLUX AI.
+      </p>
+
+      <button
+        type="button"
+        id="generateAllImagesBtn"
+        style="
+          background:#16a085;
+          color:white;
+          border:0;
+          border-radius:9px;
+          padding:13px 20px;
+          font-weight:bold;
+          cursor:pointer;
+          margin:10px 0 18px;
+        "
+      >
+        ✨ GENERATE SEMUA GAMBAR
+      </button>
+
+      <p id="allImagesStatus" style="color:#54d5e8"></p>
+
+      ${sceneCards}
+    </section>
+  `);
+
+  const panel = document.getElementById("imageGenerationPanel");
+
+  panel.addEventListener("click", async event => {
+    const singleButton = event.target.closest(
+      "[data-generate-scene-image]"
+    );
+
+    if (singleButton) {
+      await generateOneSceneImage(
+        singleButton.dataset.generateSceneImage,
+        singleButton
+      );
+      return;
+    }
+
+    if (event.target.id === "generateAllImagesBtn") {
+      await generateAllSceneImages(scenes);
+    }
+  });
+}
+
+// =================================
+// GENERATE SATU GAMBAR
+// =================================
+
+async function generateOneSceneImage(sceneId, button) {
+  const status = document.getElementById(
+    "sceneImageStatus-" + sceneId
+  );
+
+  const preview = document.getElementById(
+    "sceneImagePreview-" + sceneId
+  );
+
+  const originalText = button.textContent;
+
+  button.disabled = true;
+  button.textContent = "Sedang membuat gambar...";
+
+  if (status) status.textContent = "FLUX AI sedang bekerja...";
+
+  try {
+    const result = await apiRequest(
+      `/api/scenes/${encodeURIComponent(sceneId)}/generate-image`,
+      {
+        method: "POST",
+        body: JSON.stringify({})
+      }
+    );
+
+    if (!result.image_url) {
+      throw new Error("URL gambar tidak ditemukan.");
+    }
+
+    const imageUrl = new URL(result.image_url);
+
+    if (imageUrl.protocol !== "https:") {
+      throw new Error("Alamat gambar tidak aman.");
+    }
+
+    preview.innerHTML = `
+      <img
+        src="${escapeHTML(imageUrl.href)}"
+        alt="Hasil gambar adegan"
+        style="
+          width:100%;
+          max-width:420px;
+          border-radius:10px;
+          display:block;
+          margin:12px 0;
+        "
+      >
+    `;
+
+    if (status) {
+      status.textContent = "✓ Gambar berhasil dibuat dan disimpan.";
+    }
+
+    button.textContent = "Buat Ulang Gambar";
+
+    return true;
+
+  } catch (error) {
+    console.error("Generate gambar gagal:", error);
+
+    if (status) {
+      status.textContent = "Gagal: " + error.message;
+    }
+
+    button.textContent = originalText;
+
+    return false;
+
+  } finally {
+    button.disabled = false;
+  }
+}
+
+// =================================
+// GENERATE SEMUA GAMBAR
+// =================================
+
+async function generateAllSceneImages(scenes) {
+  const button = document.getElementById("generateAllImagesBtn");
+  const status = document.getElementById("allImagesStatus");
+
+  if (!scenes || !scenes.length) {
+    notify("Tidak ada adegan untuk dibuatkan gambar.");
+    return;
+  }
+
+  const confirmed = confirm(
+    `Buat gambar untuk ${scenes.length} adegan sekarang?\n\n` +
+    "Proses akan berjalan satu per satu."
+  );
+
+  if (!confirmed) return;
+
+  button.disabled = true;
+
+  let success = 0;
+  let failed = 0;
+
+  try {
+    for (let i = 0; i < scenes.length; i++) {
+      const scene = scenes[i];
+
+      const sceneButton = document.querySelector(
+        `[data-generate-scene-image="${scene.id}"]`
+      );
+
+      if (!sceneButton) {
+        failed++;
+        continue;
+      }
+
+      status.textContent =
+        `Sedang membuat gambar ${i + 1} dari ${scenes.length}...`;
+
+      const result = await generateOneSceneImage(
+        scene.id,
+        sceneButton
+      );
+
+      if (result) {
+        success++;
+      } else {
+        failed++;
+      }
+    }
+
+    status.textContent =
+      `Selesai! Berhasil: ${success}, gagal: ${failed}.`;
+
+    notify(
+      `Proses gambar selesai!\n\n` +
+      `Berhasil: ${success}\n` +
+      `Gagal: ${failed}`
+    );
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "✨ GENERATE SEMUA GAMBAR";
+  }
+}
+
+// =================================
+// HUBUNGKAN KE GENERATOR CERITA
+// =================================
+
+const originalRenderGeneratedStory = renderGeneratedStory;
+
+renderGeneratedStory = function(project, scenes) {
+  originalRenderGeneratedStory(project, scenes);
+
+  renderImageGenerationPanel(
+    project.id,
+    scenes
+  );
+};
+
+// =================================
+// HUBUNGKAN KE PROYEK TERSIMPAN
+// =================================
+
+const originalOpenProject = openProject;
+
+openProject = async function(id) {
+  await originalOpenProject(id);
+
+  try {
+    const result = await apiRequest(
+      `/api/projects/${encodeURIComponent(id)}/scenes`
+    );
+
+    renderImageGenerationPanel(
+      id,
+      result.scenes || []
+    );
+
+  } catch (error) {
+    console.error("Gagal menampilkan panel gambar:", error);
+  }
+};
