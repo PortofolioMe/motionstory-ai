@@ -1675,27 +1675,16 @@ async function createCarouselSlide(scene) {
 }
 
 
-// =============================================
-// HUBUNGKAN DENGAN GENERATOR CERITA
-// =============================================
-
-const previousStoryRenderForCarousel = renderGeneratedStory;
-
-renderGeneratedStory = function(project, scenes) {
-  previousStoryRenderForCarousel(project, scenes);
-
-  renderContentBuilderPanel(project.id);
-};
-
 
 // =============================================
-// HUBUNGKAN DENGAN PROYEK TERSIMPAN
+// HUBUNGKAN CONTENT BUILDER KE GENERATOR GAMBAR
 // =============================================
 
-const previousOpenProjectForCarousel = openProject;
+const originalImagePanelForCarousel =
+  renderImageGenerationPanel;
 
-openProject = async function(id) {
-  await previousOpenProjectForCarousel(id);
+renderImageGenerationPanel = function(projectId, scenes) {
+  originalImagePanelForCarousel(projectId, scenes);
 
-  renderContentBuilderPanel(id);
+  renderContentBuilderPanel(projectId);
 };
