@@ -185,6 +185,23 @@ function renderProjectCard(project) {
 
         <button
           type="button"
+          data-add-queue="${id}"
+          data-project-title="${title}"
+          style="
+            background:#16a085;
+            color:#ffffff;
+            border:0;
+            border-radius:8px;
+            padding:10px 16px;
+            font-weight:600;
+            cursor:pointer;
+          "
+        >
+          + Antrean
+        </button>
+
+        <button
+          type="button"
           data-open-project="${id}"
           style="
             background:#7865e9;
@@ -268,6 +285,22 @@ async function handleProjectAction(event) {
     return;
   }
 
+  const queueButton = event.target.closest(
+    "[data-add-queue]"
+  );
+
+  if (queueButton) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    await addProjectToQueue(
+      queueButton.dataset.addQueue,
+      queueButton.dataset.projectTitle,
+      queueButton
+    );
+    return;
+  }
+
   const openButton = event.target.closest(
     "[data-open-project]"
   );
@@ -280,6 +313,157 @@ async function handleProjectAction(event) {
     await openProject(id);
   }
 }
+
+// =================================
+// AUTOMATION - TAMBAH PROYEK KE ANTREAN
+// =================================
+
+async function addProjectToQueue(projectId, projectTitle, button) {
+  if (!projectId) {
+    notify("ID proyek tidak ditemukan.");
+    return;
+  }
+
+  const localSchedule = prompt(
+    `Atur jadwal publikasi untuk "${projectTitle}".\\n\\n` +
+    "Masukkan tanggal dan jam WIB dengan format:\\n" +
+    "YYYY-MM-DDTHH:mm\\n\\n" +
+    "Contoh: 2026-11-23T09:00"
+  );
+
+  if (!localSchedule) return;
+
+  if (!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(localSchedule)) {
+    notify("Format jadwal tidak valid. Gunakan YYYY-MM-DDTHH:mm.");
+    return;
+  }
+
+  // Backend menyimpan timestamp ISO. Offset +07:00 memastikan jadwal WIB.
+  const scheduledDate = new Date(localSchedule + ":00+07:00");
+
+  if (Number.isNaN(scheduledDate.getTime())) {
+    notify("Tanggal atau jam tidak valid.");
+    return;
+  }
+
+  if (scheduledDate.getTime() <= Date.now()) {
+    notify("Jadwal harus berada di masa mendatang.");
+    return;
+  }
+
+  const caption = prompt(
+    "Masukkan caption TikTok (opsional):",
+    projectTitle || ""
+  );
+
+  const originalText = button ? button.textContent : "";
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Menambahkan...";
+  }
+
+  try {
+    const result = await apiRequest("/api/automation/queue", {
+      method: "POST",
+      body: JSON.stringify({
+        project_id: projectId,
+        scheduled_at: scheduledDate.toISOString(),
+        caption: caption || ""
+      })
+    });
+
+    notify(
+      result.message ||
+      "Konten berhasil masuk antrean dan menunggu persetujuan."
+    );
+
+    await loadAutomationDashboard();
+
+  } catch (error) {
+    console.error("Gagal menambahkan antrean:", error);
+    notify("Gagal menambahkan ke antrean: " + error.message);
+
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalText || "+ Antrean";
+    }
+  }
+}
+
+
+// =================================
+// AUTOMATION - SETUJUI ANTREAN
+// =================================
+
+async function approveQueueItem(queueId, button) {
+  if (!queueId) {
+    notify("ID antrean tidak ditemukan.");
+    return;
+  }
+
+  const confirmed = confirm(
+    "Setujui konten ini?\\n\\n" +
+    "Status akan berubah menjadi Siap Dipublikasikan. " +
+    "Video belum otomatis diunggah ke TikTok."
+  );
+
+  if (!confirmed) return;
+
+  const originalText = button ? button.textContent : "";
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Menyetujui...";
+  }
+
+  try {
+    const result = await apiRequest(
+      `/api/automation/queue/${encodeURIComponent(queueId)}/approve`,
+      {
+        method: "POST",
+        body: JSON.stringify({})
+      }
+    );
+
+    notify(
+      result.message ||
+      "Konten disetujui dan siap dipublikasikan."
+    );
+
+    await loadAutomationDashboard();
+
+  } catch (error) {
+    console.error("Gagal menyetujui antrean:", error);
+    notify("Gagal menyetujui konten: " + error.message);
+
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalText || "Setujui";
+    }
+  }
+}
+
+
+// =================================
+// AUTOMATION - EVENT ANTREAN
+// =================================
+
+document.addEventListener("click", event => {
+  const approveButton = event.target.closest("[data-approve-queue]");
+
+  if (!approveButton) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  approveQueueItem(
+    approveButton.dataset.approveQueue,
+    approveButton
+  );
+});
+
 
 // =================================
 // DELETE PROJECT
@@ -838,7 +1022,7 @@ async function loadAutomationDashboard() {
 
     queueList.innerHTML = queue.map(item => {
       const statusLabels = {
-        queued: "Dalam antrean",
+        queued: "Siap dipublikasikan",
         pending_approval: "Menunggu persetujuan",
         awaiting_approval: "Menunggu persetujuan",
         published: "Berhasil dipublikasikan",
@@ -847,6 +1031,31 @@ async function loadAutomationDashboard() {
 
       const statusLabel =
         statusLabels[item.status] || item.status || "Tidak diketahui";
+
+      const needsApproval =
+        item.status === "pending_approval" ||
+        item.status === "awaiting_approval";
+
+      const approveButton = needsApproval
+        ? `
+          <button
+            type="button"
+            data-approve-queue="${escapeHTML(item.id)}"
+            style="
+              background:#16a085;
+              color:#ffffff;
+              border:0;
+              border-radius:8px;
+              padding:10px 16px;
+              margin-top:12px;
+              font-weight:600;
+              cursor:pointer;
+            "
+          >
+            Setujui Konten
+          </button>
+        `
+        : "";
 
       const scheduled = item.scheduled_at
         ? new Date(item.scheduled_at).toLocaleString("id-ID", {
@@ -879,6 +1088,7 @@ async function loadAutomationDashboard() {
               Keterangan: ${escapeHTML(item.error_message)}
             </p>
           ` : ""}
+          ${approveButton}
         </div>
       `;
     }).join("");
