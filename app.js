@@ -765,6 +765,141 @@ function renderGeneratedStory(project, scenes) {
 }
 
 // =================================
+// AUTOMATION DASHBOARD
+// =================================
+
+async function loadAutomationDashboard() {
+  const systemStatus = document.getElementById("autoSystemStatus");
+  const dailyTarget = document.getElementById("autoDailyTarget");
+  const approvalStatus = document.getElementById("autoApprovalStatus");
+  const pendingCount = document.getElementById("pendingApprovalCount");
+  const publishedCount = document.getElementById("publishedCount");
+  const failedCount = document.getElementById("failedPostCount");
+  const queueList = document.getElementById("publicationQueueList");
+
+  if (!systemStatus || !queueList) return;
+
+  try {
+    const result = await apiRequest("/api/automation/dashboard");
+    const settings = result.settings || {};
+    const stats = result.stats || {};
+    const queue = result.queue || [];
+
+    const enabled = Number(settings.enabled) === 1;
+
+    systemStatus.textContent = enabled ? "Aktif" : "Nonaktif";
+    systemStatus.style.color = enabled ? "#8ce5c3" : "#fcd978";
+
+    dailyTarget.textContent =
+      (Number(settings.daily_target) || 0) + " Video";
+
+    approvalStatus.textContent =
+      Number(settings.approval_required) === 1 ? "Wajib" : "Tidak wajib";
+
+    pendingCount.textContent = Number(stats.pending_approval || 0);
+    publishedCount.textContent = Number(stats.published || 0);
+    failedCount.textContent = Number(stats.failed || 0);
+
+    let postingTimes = [];
+    try {
+      postingTimes = JSON.parse(settings.posting_times || "[]");
+    } catch {
+      postingTimes = [];
+    }
+
+    const timezone = settings.timezone || "Asia/Jakarta";
+    const scheduleText = postingTimes.length
+      ? postingTimes.map(time => escapeHTML(time)).join(" • ") + " WIB"
+      : "Belum diatur";
+
+    const scheduleContainer = document.querySelector(
+      "#automationDashboard strong"
+    );
+
+    // Perbarui jadwal yang tampil pada panel kontrol otomatis.
+    const scheduleLabels = document.querySelectorAll(
+      "#automationDashboard .stats + div"
+    );
+    if (scheduleLabels.length) {
+      const scheduleValue = scheduleLabels[0].querySelector("div");
+      if (scheduleValue) {
+        scheduleValue.textContent = scheduleText;
+      }
+    }
+
+    if (!queue.length) {
+      queueList.innerHTML = `
+        <p style="color:#aeb9d2">
+          Belum ada konten dalam antrean publikasi.
+        </p>
+      `;
+      return;
+    }
+
+    queueList.innerHTML = queue.map(item => {
+      const statusLabels = {
+        queued: "Dalam antrean",
+        pending_approval: "Menunggu persetujuan",
+        awaiting_approval: "Menunggu persetujuan",
+        published: "Berhasil dipublikasikan",
+        failed: "Gagal dipublikasikan"
+      };
+
+      const statusLabel =
+        statusLabels[item.status] || item.status || "Tidak diketahui";
+
+      const scheduled = item.scheduled_at
+        ? new Date(item.scheduled_at).toLocaleString("id-ID", {
+            dateStyle: "medium",
+            timeStyle: "short",
+            timeZone: timezone
+          }) + " WIB"
+        : "Jadwal belum ditentukan";
+
+      return `
+        <div style="
+          background:#101628;
+          border:1px solid #35415f;
+          border-radius:10px;
+          padding:14px;
+          margin:10px 0;
+          color:#f4f6ff;
+        ">
+          <strong style="color:#ffffff">
+            ${escapeHTML(item.project_title || "Konten tanpa judul")}
+          </strong>
+          <p style="color:#cbd3e8;margin:8px 0">
+            Jadwal: ${escapeHTML(scheduled)}
+          </p>
+          <p style="color:#54d5e8;margin:0">
+            Status: ${escapeHTML(statusLabel)}
+          </p>
+          ${item.error_message ? `
+            <p style="color:#f4a6a6;margin:8px 0 0">
+              Keterangan: ${escapeHTML(item.error_message)}
+            </p>
+          ` : ""}
+        </div>
+      `;
+    }).join("");
+
+  } catch (error) {
+    console.error("Gagal memuat dashboard otomatis:", error);
+
+    systemStatus.textContent = "Gagal memuat";
+    pendingCount.textContent = "—";
+    publishedCount.textContent = "—";
+    failedCount.textContent = "—";
+
+    queueList.innerHTML = `
+      <p style="color:#f4a6a6">
+        Tidak dapat memuat data dashboard: ${escapeHTML(error.message)}
+      </p>
+    `;
+  }
+}
+
+// =================================
 // TIKTOK STATUS
 // =================================
 
@@ -971,6 +1106,7 @@ document.getElementById("saveSettings").addEventListener(
     if (connected) {
       await loadProjects();
       await loadTikTokStatus();
+      await loadAutomationDashboard();
     }
   }
 );
@@ -1033,6 +1169,7 @@ async function initializeApp() {
   if (connected) {
     await loadProjects();
     await loadTikTokStatus();
+    await loadAutomationDashboard();
 
   } else {
     showTikTokDisconnected();
