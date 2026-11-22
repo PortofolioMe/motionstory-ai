@@ -818,10 +818,10 @@ async function loadTikTokStatus() {
       message.textContent =
         "Akun TikTok Anda berhasil terhubung dengan MOTIONSTORY AI.";
 
-      button.textContent = "TikTok Sudah Terhubung";
-      button.disabled = true;
-      button.style.opacity = "0.65";
-      button.style.cursor = "not-allowed";
+      button.textContent = "Hubungkan Ulang TikTok";
+      button.disabled = false;
+      button.style.opacity = "1";
+      button.style.cursor = "pointer";
 
     } else {
       showTikTokDisconnected();
