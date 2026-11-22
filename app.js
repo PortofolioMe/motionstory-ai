@@ -325,15 +325,15 @@ async function addProjectToQueue(projectId, projectTitle, button) {
   }
 
   const localSchedule = prompt(
-    `Atur jadwal publikasi untuk "${projectTitle}".\\n\\n` +
-    "Masukkan tanggal dan jam WIB dengan format:\\n" +
-    "YYYY-MM-DDTHH:mm\\n\\n" +
+    `Atur jadwal publikasi untuk "${projectTitle}".\n\n` +
+    "Masukkan tanggal dan jam WIB dengan format:\n" +
+    "YYYY-MM-DDTHH:mm\n\n" +
     "Contoh: 2026-11-23T09:00"
   );
 
   if (!localSchedule) return;
 
-  if (!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(localSchedule)) {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(localSchedule)) {
     notify("Format jadwal tidak valid. Gunakan YYYY-MM-DDTHH:mm.");
     return;
   }
@@ -404,7 +404,7 @@ async function approveQueueItem(queueId, button) {
   }
 
   const confirmed = confirm(
-    "Setujui konten ini?\\n\\n" +
+    "Setujui konten ini?\n\n" +
     "Status akan berubah menjadi Siap Dipublikasikan. " +
     "Video belum otomatis diunggah ke TikTok."
   );
