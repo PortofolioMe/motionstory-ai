@@ -331,6 +331,105 @@
           </button>
 
         </div>
+          
+        <!-- AUTOMATION CONTROL -->
+        <div class="tiktok-card" id="automationDashboard">
+
+          <h3>Kontrol Produksi Otomatis</h3>
+
+          <p>
+            Pengaturan produksi konten MOTIONSTORY AI.
+          </p>
+
+          <div class="stats">
+
+            <div class="stat-card">
+              <span>Status Sistem</span>
+              <strong id="autoSystemStatus">Memeriksa...</strong>
+            </div>
+
+            <div class="stat-card">
+              <span>Target Harian</span>
+              <strong id="autoDailyTarget">3 Video</strong>
+            </div>
+
+            <div class="stat-card">
+              <span>Persetujuan</span>
+              <strong id="autoApprovalStatus">Wajib</strong>
+            </div>
+
+          </div>
+
+          <div style="
+            background:#101628;
+            border:1px solid #35415f;
+            border-radius:12px;
+            padding:16px;
+            margin-top:16px;
+          ">
+
+            <strong style="color:white">
+              Jadwal Produksi
+            </strong>
+
+            <div style="
+              display:flex;
+              gap:10px;
+              flex-wrap:wrap;
+              margin-top:14px;
+            ">
+
+              <span style="background:#28314b;padding:9px 14px;border-radius:8px">
+                09.00 WIB
+              </span>
+
+              <span style="background:#28314b;padding:9px 14px;border-radius:8px">
+                15.00 WIB
+              </span>
+
+              <span style="background:#28314b;padding:9px 14px;border-radius:8px">
+                20.00 WIB
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- PUBLICATION QUEUE -->
+        <div class="tiktok-card" id="publicationDashboard">
+
+          <h3>Antrean Publikasi</h3>
+
+          <p>
+            Pantau video yang menunggu persetujuan sebelum dipublikasikan.
+          </p>
+
+          <div class="stats">
+
+            <div class="stat-card">
+              <span>Menunggu Persetujuan</span>
+              <strong id="pendingApprovalCount">—</strong>
+            </div>
+
+            <div class="stat-card">
+              <span>Berhasil Dipublikasikan</span>
+              <strong id="publishedCount">—</strong>
+            </div>
+
+            <div class="stat-card">
+              <span>Gagal Dipublikasikan</span>
+              <strong id="failedPostCount">—</strong>
+            </div>
+
+          </div>
+
+          <div id="publicationQueueList" style="margin-top:18px">
+            <p>Data antrean akan ditampilkan setelah terhubung ke database.</p>
+          </div>
+
+        </div>
 
         <div class="stats">
           <div class="stat-card">
