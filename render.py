@@ -19,10 +19,11 @@ def api_get(path):
     req = urllib.request.Request(
         API_URL + path,
         headers={
-            "Authorization": "Bearer " + API_TOKEN,
-            "Accept": "application/json",
-            "Origin": "https://portofoliome.github.io"
-        }
+    "Authorization": "Bearer " + API_TOKEN,
+    "Accept": "application/json",
+    "Origin": "https://portofoliome.github.io",
+    "User-Agent": "MOTIONSTORY-AI-GitHubActions/1.0 (+https://github.com/PortofolioMe/motionstory-ai)"
+}
     )
 
     try:
