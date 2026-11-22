@@ -1,0 +1,44 @@
+
+name: MOTIONSTORY AI - Render Video
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_id:
+        description: "ID project MOTIONSTORY AI"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ambil repository
+        uses: actions/checkout@v4
+
+      - name: Siapkan Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Siapkan FFmpeg
+        uses: FedericoCarboni/setup-ffmpeg@v3
+
+      - name: Periksa konfigurasi
+        env:
+          API_TOKEN: ${{ secrets.MOTIONSTORY_API_TOKEN }}
+          PROJECT_ID: ${{ inputs.project_id }}
+        run: |
+          if [ -z "$API_TOKEN" ]; then
+            echo "MOTIONSTORY_API_TOKEN belum diatur."
+            exit 1
+          fi
+          if [ -z "$PROJECT_ID" ]; then
+            echo "Project ID belum diisi."
+            exit 1
+          fi
+          echo "Konfigurasi berhasil diperiksa."
+          echo "Project ID: $PROJECT_ID"
