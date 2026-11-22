@@ -1360,3 +1360,342 @@ openProject = async function(id) {
     console.error("Gagal menampilkan panel gambar:", error);
   }
 };
+
+// =============================================
+// MOTIONSTORY AI - FOTO CAROUSEL BUILDER
+// =============================================
+
+function renderContentBuilderPanel(projectId) {
+  const output = document.getElementById("generatedResult");
+
+  if (!output || !projectId) return;
+
+  document.getElementById("contentBuilderPanel")?.remove();
+
+  output.insertAdjacentHTML("beforeend", `
+    <section
+      id="contentBuilderPanel"
+      style="
+        background:#171e32;
+        border:1px solid #35415f;
+        border-radius:14px;
+        padding:20px;
+        margin-top:24px;
+      "
+    >
+      <h2 style="color:white">CONTENT BUILDER AI</h2>
+
+      <p style="color:#cbd3e8">
+        Ubah gambar adegan menjadi foto carousel
+        dengan teks motivasi.
+      </p>
+
+      <button
+        type="button"
+        id="buildCarouselBtn"
+        style="
+          background:#16a085;
+          color:white;
+          border:0;
+          border-radius:9px;
+          padding:13px 20px;
+          font-weight:bold;
+          cursor:pointer;
+        "
+      >
+        BUAT FOTO CAROUSEL
+      </button>
+
+      <p id="carouselBuildStatus" style="color:#54d5e8"></p>
+
+      <div id="carouselBuildResults"></div>
+    </section>
+  `);
+
+  const panel = document.getElementById("contentBuilderPanel");
+
+  panel.addEventListener("click", async event => {
+    if (event.target.id !== "buildCarouselBtn") return;
+
+    await buildCarouselImages(projectId);
+  });
+}
+
+
+// =============================================
+// MEMBUAT GAMBAR CAROUSEL
+// =============================================
+
+async function buildCarouselImages(projectId) {
+  const button = document.getElementById("buildCarouselBtn");
+  const status = document.getElementById("carouselBuildStatus");
+  const results = document.getElementById("carouselBuildResults");
+
+  button.disabled = true;
+  button.textContent = "SEDANG MEMBUAT...";
+
+  results.innerHTML = "";
+
+  try {
+    // Ambil data terbaru dari database
+    const response = await apiRequest(
+      `/api/projects/${encodeURIComponent(projectId)}/scenes`
+    );
+
+    const scenes = (response.scenes || []).sort(
+      (a, b) => a.scene_number - b.scene_number
+    );
+
+    if (!scenes.length) {
+      throw new Error("Adegan tidak ditemukan.");
+    }
+
+    const readyScenes = scenes.filter(scene =>
+      scene.image_url &&
+      scene.image_url.startsWith("https://")
+    );
+
+    if (!readyScenes.length) {
+      throw new Error(
+        "Belum ada gambar adegan. Buat gambar terlebih dahulu."
+      );
+    }
+
+    let success = 0;
+    let failed = 0;
+
+    for (let i = 0; i < readyScenes.length; i++) {
+      const scene = readyScenes[i];
+
+      status.textContent =
+        `Menyusun foto ${i + 1} dari ${readyScenes.length}...`;
+
+      try {
+        const blob = await createCarouselSlide(scene);
+
+        const imageUrl = URL.createObjectURL(blob);
+
+        const card = document.createElement("div");
+
+        card.style.cssText = `
+          background:#101628;
+          border:1px solid #35415f;
+          border-radius:12px;
+          padding:14px;
+          margin:14px 0;
+        `;
+
+        const heading = document.createElement("h3");
+        heading.textContent =
+          `Foto Carousel ${i + 1}`;
+
+        heading.style.color = "white";
+
+        const preview = document.createElement("img");
+        preview.src = imageUrl;
+        preview.alt = `Foto carousel ${i + 1}`;
+
+        preview.style.cssText = `
+          width:100%;
+          max-width:320px;
+          display:block;
+          border-radius:10px;
+          margin:12px 0;
+        `;
+
+        const download = document.createElement("a");
+        download.href = imageUrl;
+        download.download =
+          `motionstory-slide-${String(i + 1).padStart(2, "0")}.jpg`;
+
+        download.textContent = "UNDUH FOTO";
+
+        download.style.cssText = `
+          display:inline-block;
+          background:#7865e9;
+          color:white;
+          padding:11px 18px;
+          border-radius:8px;
+          text-decoration:none;
+          font-weight:bold;
+        `;
+
+        card.append(heading, preview, download);
+        results.appendChild(card);
+
+        success++;
+
+      } catch (error) {
+        console.error("Gagal membuat slide:", error);
+        failed++;
+      }
+    }
+
+    status.textContent =
+      `Selesai! Berhasil: ${success}, gagal: ${failed}.`;
+
+    notify(
+      `Foto carousel selesai dibuat.\n` +
+      `Berhasil: ${success}\n` +
+      `Gagal: ${failed}`
+    );
+
+  } catch (error) {
+    console.error(error);
+    status.textContent = "Gagal: " + error.message;
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "BUAT FOTO CAROUSEL";
+  }
+}
+
+
+// =============================================
+// DESAIN SETIAP FOTO
+// =============================================
+
+async function createCarouselSlide(scene) {
+  const image = new Image();
+  image.crossOrigin = "anonymous";
+
+  await new Promise((resolve, reject) => {
+    image.onload = resolve;
+    image.onerror = () => reject(
+      new Error("Gambar tidak dapat dibaca. Periksa izin akses gambar.")
+    );
+
+    image.src = scene.image_url;
+  });
+
+  const canvas = document.createElement("canvas");
+
+  canvas.width = 1080;
+  canvas.height = 1920;
+
+  const ctx = canvas.getContext("2d");
+
+  // Gambar memenuhi kanvas tanpa distorsi
+  const scale = Math.max(
+    canvas.width / image.width,
+    canvas.height / image.height
+  );
+
+  const width = image.width * scale;
+  const height = image.height * scale;
+
+  ctx.drawImage(
+    image,
+    (canvas.width - width) / 2,
+    (canvas.height - height) / 2,
+    width,
+    height
+  );
+
+  // Lapisan gelap untuk keterbacaan teks
+  const gradient = ctx.createLinearGradient(
+    0, 950, 0, 1920
+  );
+
+  gradient.addColorStop(0, "rgba(0,0,0,0)");
+  gradient.addColorStop(0.45, "rgba(0,0,0,0.55)");
+  gradient.addColorStop(1, "rgba(0,0,0,0.88)");
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 1080, 1920);
+
+  // Ambil teks motivasi
+  const text = String(
+    scene.narration || scene.title || "Tetaplah kuat."
+  );
+
+  let fontSize = 62;
+  let lines = [];
+
+  function wrapText(size) {
+    ctx.font = `bold ${size}px Arial`;
+
+    const words = text.split(/\s+/);
+    const result = [];
+    let line = "";
+
+    for (const word of words) {
+      const test = line ? line + " " + word : word;
+
+      if (ctx.measureText(test).width > 860 && line) {
+        result.push(line);
+        line = word;
+      } else {
+        line = test;
+      }
+    }
+
+    if (line) result.push(line);
+
+    return result;
+  }
+
+  lines = wrapText(fontSize);
+
+  if (lines.length > 7) {
+    fontSize = 48;
+    lines = wrapText(fontSize);
+  }
+
+  // Teks putih di tengah bagian bawah
+  ctx.font = `bold ${fontSize}px Arial`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#ffffff";
+
+  ctx.shadowColor = "rgba(0,0,0,0.8)";
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetY = 3;
+
+  const lineHeight = fontSize * 1.4;
+  const totalHeight = lines.length * lineHeight;
+
+  let y = 1460 - totalHeight / 2;
+
+  for (const line of lines) {
+    ctx.fillText(line, 540, y, 900);
+    y += lineHeight;
+  }
+
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+
+  // Ekspor JPG
+  return await new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (blob) resolve(blob);
+      else reject(new Error("Gagal mengekspor JPG."));
+    }, "image/jpeg", 0.92);
+  });
+}
+
+
+// =============================================
+// HUBUNGKAN DENGAN GENERATOR CERITA
+// =============================================
+
+const previousStoryRenderForCarousel = renderGeneratedStory;
+
+renderGeneratedStory = function(project, scenes) {
+  previousStoryRenderForCarousel(project, scenes);
+
+  renderContentBuilderPanel(project.id);
+};
+
+
+// =============================================
+// HUBUNGKAN DENGAN PROYEK TERSIMPAN
+// =============================================
+
+const previousOpenProjectForCarousel = openProject;
+
+openProject = async function(id) {
+  await previousOpenProjectForCarousel(id);
+
+  renderContentBuilderPanel(id);
+};
