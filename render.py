@@ -2,6 +2,7 @@
 import os
 import json
 import urllib.request
+import urllib.parse
 import subprocess
 import textwrap
 from pathlib import Path
