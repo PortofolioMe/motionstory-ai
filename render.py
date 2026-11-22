@@ -1,4 +1,4 @@
-
+import urllib.error
 import os
 import json
 import urllib.request
@@ -18,10 +18,21 @@ WORK.mkdir(exist_ok=True)
 def api_get(path):
     req = urllib.request.Request(
         API_URL + path,
-        headers={"Authorization": "Bearer " + API_TOKEN}
+        headers={
+            "Authorization": "Bearer " + API_TOKEN,
+            "Accept": "application/json",
+            "Origin": "https://portofoliome.github.io"
+        }
     )
-    with urllib.request.urlopen(req, timeout=60) as response:
-        return json.loads(response.read())
+
+    try:
+        with urllib.request.urlopen(req, timeout=60) as response:
+            return json.loads(response.read())
+
+    except urllib.error.HTTPError as error:
+        print("API ERROR:", error.code)
+        print("PESAN WORKER:", error.read().decode("utf-8", errors="replace"))
+        raise
 
 print("Mengambil data project...")
 data = api_get(
