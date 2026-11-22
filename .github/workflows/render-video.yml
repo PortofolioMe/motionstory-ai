@@ -1,6 +1,6 @@
 
 name: MOTIONSTORY AI - Render Video
-
+run-name: MOTIONSTORY Render - ${{ inputs.project_id }}
 on:
   workflow_dispatch:
     inputs:
